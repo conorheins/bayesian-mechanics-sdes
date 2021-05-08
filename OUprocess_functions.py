@@ -24,7 +24,7 @@ class OU_process(object):
     def __init__(self, dim, friction, volatility):
         super(OU_process, self).__init__()  # constructs the object instance
         self.d = dim
-        self.B = friction
+        self.B = friction #(negative) drift matrix
         self.sigma = volatility
 
     def simulation(self, x0, epsilon=0.01, T=100, N=1):  # run OU process for multiple trajectories
@@ -42,7 +42,7 @@ class OU_process(object):
             x[:, t, :] = x[:, t - 1, :] - epsilon * np.tensordot(self.B, x[:, t - 1, :], axes=1) \
                          + np.tensordot(self.sigma, w[:, t - 1, :], axes=1)
             if np.count_nonzero(np.isnan(x)):
-                raise TypeError("nan")
+                raise TypeError("nan: process went too far: consider increasing the eigenvalues of the drift matrix")
         return x
 
     def simulation_float128(self, x0, epsilon=0.01, T=100, N=1):  # run OU process for multiple trajectories float 128
