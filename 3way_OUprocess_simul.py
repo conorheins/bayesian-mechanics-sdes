@@ -39,6 +39,10 @@ if np.any(spec(Pi) <= 0):
 # We compute the stationary covariance
 S = np.linalg.inv(Pi)
 
+'''
+Setting up synchronisation map
+'''
+
 # We check that the synchronisation map is well defined
 if S[di, db] == 0:
     raise TypeError("Synchronisation map not well defined: bold_mu(b) not invertible!")
@@ -58,8 +62,8 @@ Setting up the OU process
 # sigma = np.random.normal(scale=std, size=dim ** 2).reshape([dim, dim])  # arbitrary volatility matrix
 # sigma = np.zeros([dim,dim]) #no noise
 # sigma = np.diag(np.random.normal(scale=std, size=dim)) # arbitrary diagonal volatility matrix
-sigma = np.array([2, 1.5, 0.5, 0, 3, 2, 0, 0, 2]).reshape([dim, dim]) #selected non-degenerate noise
-#sigma = np.array([2, 1.5, 0.5, 0, 0, 2, 0, 0, 2]).reshape([dim, dim]) #selected degenerate noise
+#sigma = np.array([2, 1.5, 0.5, 0, 3, 2, 0, 0, 2]).reshape([dim, dim]) #selected non-degenerate noise
+sigma = np.array([2, 1.5, 0.5, 0, 0, 2, 0, 0, 2]).reshape([dim, dim]) #selected degenerate noise
 
 # see whether noise is degenerate or not
 print(f'det sigma = {det(sigma)}')
@@ -167,8 +171,12 @@ plt.savefig("sync_map_OUprocess.png")
 OU process perturbed simulation
 '''
 
-# start many trajectories at a really high free energy
-x0[db] = 10  # perturbing blanket states
+b= 10 #specify blanket state
+
+x0[db,:] = b
+#initialising external and internal states at posterior distributions
+x0[di,:] = np.random.normal(loc=float(mu)*b, scale= np.sqrt(float(Pi[di,di])**(-1)), size=[N])
+x0[de,:] = np.random.normal(loc=float(eta)*b, scale= np.sqrt(float(Pi[de,de])**(-1)), size=[N])
 
 # sample paths
 x = process.simulation(x0, epsilon, T, N)  # run simulation
@@ -211,7 +219,7 @@ plt.ylabel('internal state $ \mu$')
 plt.xlabel('blanket state $b$')
 plt.plot(blanket, float(mu) * blanket, c='white')  # plot expected internal state as a function of blanket states
 OU.plot_hot_colourline(x[db, :, n].reshape([T]), x[di, :, n].reshape([T]), lw=0.5)
-plt.text(s='$\mathbf{\mu}(b)$', x=np.min(x[db, :, :]) - 0.5, y=mu * (np.min(x[db, :, :]) - 0.5) + 0.2, color='white')
+plt.text(s='$\mathbf{\mu}(b)$', x=np.min(x[db, :, :]) - 0.7, y=mu * (np.min(x[db, :, :]) - 0.7) + 0.2, color='white')
 plt.text(s='$(b_t, \mu_t)$', x=x[db, 1, n] - 2, y=x[di, 1, n], color='black')
 plt.savefig("Sample_FE_large.png")
 
@@ -228,7 +236,7 @@ mean_F = np.mean(F_z, axis=1)  # take mean over trajectories
 
 plt.figure(3)
 plt.clf()
-plt.title('Average $F(b_t, \mu_t)$ of perturbed system')
+plt.title('Free energy over time')
 OU.plot_hot_colourline(np.arange(T), mean_F)
 xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mu_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F) - mean_F[xlabel]), color='black')
