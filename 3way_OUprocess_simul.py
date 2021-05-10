@@ -62,8 +62,8 @@ Setting up the OU process
 # sigma = np.random.normal(scale=std, size=dim ** 2).reshape([dim, dim])  # arbitrary volatility matrix
 # sigma = np.zeros([dim,dim]) #no noise
 # sigma = np.diag(np.random.normal(scale=std, size=dim)) # arbitrary diagonal volatility matrix
-#sigma = np.array([2, 1.5, 0.5, 0, 3, 2, 0, 0, 2]).reshape([dim, dim]) #selected non-degenerate noise
-sigma = np.array([2, 1.5, 0.5, 0, 0, 2, 0, 0, 2]).reshape([dim, dim]) #selected degenerate noise
+sigma = np.array([2, 1.5, 0.5, 0, 3, 2, 0, 0, 2]).reshape([dim, dim]) #selected non-degenerate noise
+#sigma = np.array([2, 1.5, 0.5, 0, 0, 2, 0, 0, 2]).reshape([dim, dim]) #selected degenerate noise
 
 # see whether noise is degenerate or not
 print(f'det sigma = {det(sigma)}')
@@ -152,9 +152,9 @@ plt.figure(1)
 plt.clf()
 plt.suptitle('Synchronisation map')
 plt.scatter(bins[j == 1], sync_bold_mu[j == 1], s=1, alpha=0.5,
-            label='Prediction: $\sigma(\mathbf{\mu}(b))$')  # scatter plot theoretical expected internal state
+            label='Prediction: $\sigma(\mathbf{\mu}(b_t))$')  # scatter plot theoretical expected internal state
 plt.scatter(bins[j == 1], bold_eta_empirical[j == 1], s=1, alpha=0.5,
-            label='Actual: $\mathbf{\eta}(b)$')  # scatter plot empirical external internal state
+            label='Actual: $\mathbf{\eta}(b_t)$')  # scatter plot empirical external internal state
 # plt.scatter(bins[j == 1], bold_eta_theoretical[j == 1], s=1, alpha=0.5,label='Theo: $\mathbf{\eta}(b)$')
 plt.xlabel('Blanket state space $\mathcal{B}$')
 plt.ylabel('External state space $\mathcal{E}$')
@@ -163,7 +163,7 @@ cor = scipy.stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
 plt.title(f'Pearson correlation = {np.round(cor[0], 6)}...')
 # plt.xlim(-4, 4)
 # plt.ylim(-4, 4)
-plt.savefig("sync_map_OUprocess.png")
+plt.savefig("sync_map_3wayOUprocess.png")
 
 
 
@@ -221,7 +221,7 @@ plt.plot(blanket, float(mu) * blanket, c='white')  # plot expected internal stat
 OU.plot_hot_colourline(x[db, :, n].reshape([T]), x[di, :, n].reshape([T]), lw=0.5)
 plt.text(s='$\mathbf{\mu}(b)$', x=np.min(x[db, :, :]) - 0.7, y=mu * (np.min(x[db, :, :]) - 0.7) + 0.2, color='white')
 plt.text(s='$(b_t, \mu_t)$', x=x[db, 1, n] - 2, y=x[di, 1, n], color='black')
-plt.savefig("Sample_FE_large.png")
+plt.savefig("Sample_perturbed_3wayOU.png")
 
 '''
 Figure 3: average free energy over trajectories
@@ -242,4 +242,4 @@ xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mu_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F) - mean_F[xlabel]), color='black')
 plt.xlabel('Time')
 plt.ylabel('Free energy $F(b, \mu)$')
-plt.savefig("FE_vs_time_FE_large.png")
+plt.savefig("FE_vs_time_perturbed_3wayOU.png")
