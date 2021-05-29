@@ -1,4 +1,5 @@
 from .diffusions import LinearProcess
+from .utilities import initialize_random_friction
 import jax.numpy as jnp
 from jax import random
 
@@ -6,26 +7,26 @@ from matplotlib import pyplot as plt
 
 key = random.PRNGKey(1)
 
-n_var = 2
-B = jnp.array([ [-0.5, 0.5], [0.5, -0.5]])
+n_var = 6
 
-# print(jnp.linalg.eigvals(B))
+random_evals = 0.1 * random.uniform(key, shape = (n_var, ))
+B = initialize_random_friction(random_evals)
 
-# sigma = 0.01 * jnp.diag(jnp.ones(n_var))
-# D = jnp.dot(sigma, sigma.T) / 2.0
-# test_process = LinearProcess(n_var, B, sigma)
+sigma = 0.01 * jnp.diag(jnp.ones(n_var))
+D = jnp.dot(sigma, sigma.T) / 2.0
+test_process = LinearProcess(n_var, B, sigma)
 
-# n_real = 50
-# T = 100000
+n_real = 50
+T = 100000
 
-# x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), D, shape = (n_real,) ), (1, 0))
+x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), D, shape = (n_real,) ), (1, 0))
 
-# x_t = test_process.integrate(x0, dt = 0.01, T = T, N = n_real)
+x_t = test_process.integrate(x0, dt = 0.01, T = T, N = n_real)
 
-# real_idx = random.choice(key,n_real)
-# fig, ax = plt.subplots(figsize=(16,12))
-# ax.plot(x_t[:,:,real_idx])
-# plt.savefig(f"ou_realization_{real_idx}.png")
+real_idx = random.choice(key,n_real)
+fig, ax = plt.subplots(figsize=(16,12))
+ax.plot(x_t[:,:,real_idx])
+plt.savefig(f"ou_realization_{real_idx}.png")
 
 # N = 50
 
