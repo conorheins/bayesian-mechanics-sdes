@@ -7,10 +7,12 @@ import numpy as np
 from numpy.linalg import inv, det, pinv
 from numpy.linalg import eigvals as spec
 import matplotlib.pyplot as plt
+from matplotlib.patches import Ellipse, Patch
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
 from scipy.linalg import null_space as ker
+from scipy.linalg import sqrtm
 
 '''
 Functions
@@ -145,6 +147,7 @@ x0[de, :] = np.random.multivariate_normal(mean=eta @ b, cov=inv(Pi[de, de]), siz
 # sample paths
 x = process.simulation(x0, epsilon, T, N)  # run simulation
 
+
 '''
 Figure 2: Heat map of F(b, bold mu) and sample path
 '''
@@ -211,6 +214,7 @@ plt.text(s='$F(b_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.m
 plt.xlabel('Time')
 plt.ylabel('Free energy $F(b, \mathbf{\mu})$')
 plt.savefig("FE_vs_time_perturbed_6wayOU.png")
+
 
 '''
 OU process perturbed sensory states simulation 
@@ -291,3 +295,103 @@ plt.text(s='$F(s_t, a_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * 
 plt.xlabel('Time')
 plt.ylabel('Free energy $F(s,a, \mathbf{\mu})$')
 plt.savefig("FE_vs_time_perturbed_AI_6wayOU.png")
+
+'''
+Figure 6: Evoked response plots (showing how conditional distribution over external states - parameterised with variational mean and variance) changes
+over time after the perturbation.
+'''
+
+##
+## Figure 6a - plot the marginal predictions for each external state, overlaid with true external state and marginal variances
+##
+
+mean_trajectory = x.mean(axis=2)
+eta_samples = x[de,:,:]
+
+posterior_means = sync.dot(mean_trajectory[di,:])
+posterior_stds = sqrtm(inv(Pi[de,de]))
+
+pred_upper_CI_mu0 = posterior_means[0]+ 1.96 * posterior_stds[0,0]
+pred_lower_CI_mu0 = posterior_means[0]- 1.96 * posterior_stds[0,0]
+
+pred_upper_CI_mu1 = posterior_means[1] + 1.96 * posterior_stds[1,1]
+pred_lower_CI_mu1 = posterior_means[1] - 1.96 * posterior_stds[1,1]
+
+t_axis = np.arange(T)
+plt.figure(figsize=(19,12))
+plt.clf()
+plt.title('Average predictions $\sigma(\mu_t)$ and realized trajectories $\eta_t$',fontsize=30, pad = 10)
+
+plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
+eta1_real_line = plt.plot(t_axis, eta_samples[0,:,::50], lw = 0.5, color = 'r', label='Sample paths: $\eta_1(t)$')
+mu1_mean_line = plt.plot(t_axis,posterior_means[0], color='b',label='Average prediction: $\mathbf{\eta}_1(\mu_t)$',lw=2.0)
+
+plot_offset = 3.0
+plt.fill_between(t_axis,pred_upper_CI_mu1 + plot_offset, pred_lower_CI_mu1 + plot_offset, color='#3de3ac', alpha=0.25)
+eta2_real_line = plt.plot(t_axis, eta_samples[1,:,::50] + plot_offset, lw = 0.5, color = '#933aab', label='Sample paths: $\eta_2(t)$')
+mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89',label='Average prediction: $\mathbf{\eta}_2(\mu_t)$',lw=2.0)
+
+ci_patch_1 = Patch(color='blue',alpha=0.1, label='Confidence intervals $\mathbf{\eta}_1(\mu_t)$')
+ci_patch_2 = Patch(color='#3de3ac',alpha=0.25, label='Confidence intervals $\mathbf{\eta}_2(\mu_t)$')
+
+plt.legend(handles=[mu1_mean_line[0], eta1_real_line[0], mu2_mean_line[0], eta2_real_line[0], ci_patch_1, ci_patch_2], loc='lower left',fontsize=20, ncol = 3)
+
+min_value = min( ( pred_lower_CI_mu0.min(), eta_samples[0].min() ) )
+max_value = max( ( (pred_upper_CI_mu1 + plot_offset).max(), (eta_samples[1]+plot_offset).max() ) )
+
+plt.xlim(t_axis[0], t_axis[-1])
+plt.ylim(1.25 * min_value, 1.1 * max_value )
+
+plt.gca().tick_params(axis='both', which='both', labelsize=25)
+plt.gca().set_xlabel('Time',fontsize=30)
+plt.gca().set_ylabel('External state space $\mathcal{E}$',fontsize=30)
+plt.savefig("average_prediction_sensory_perturbation.png", dpi=100)
+
+##
+## Figure 6b - plot the centered bivariate predictions for external states, overlaid with the analytic covariance / confidence intervals
+##
+
+steady_state_taxis = np.arange(100,T) # time period where steady-state (post-perturbation) is assumed
+x_ss = x[:,steady_state_taxis,:].reshape(x.shape[0], len(steady_state_taxis) * x.shape[2]) # unwrap realizations (third dimension) to make one long matrix
+
+mu_ss = x_ss[di,:] # all realizations, for all timesteps, of internal states
+eta_ss = x_ss[de,:] # all realizations, for all timesteps, of external states
+
+q_mu = sync.dot(mu_ss) # predicted external states, parameterised by instantaneous internal states
+
+fig, ax = plt.subplots(figsize=(14,10))
+plt.title('Prediction errors and covariance $\mathbf{\Pi}_{\eta}^{-1}$',fontsize=26, pad = 10)
+
+prediction_errors = eta_ss - q_mu # prediction errors - difference between realization of external state and 'predicted' external state
+prediction_centroid = np.mean(prediction_errors,axis=1) # mean over time should be roughly [0.0, 0.0]
+
+dots = ax.plot(prediction_errors[0,0::100],prediction_errors[1,0::100],'ko',markersize=3.5,label='Centered predictions')
+posterior_cov = inv(Pi[de,de]) # analytic covariance of posterior predictions (simply the marginal covariance of the external states)
+
+def eigsorted(cov):
+    vals, vecs = np.linalg.eigh(cov)
+    order = vals.argsort()[::-1]
+    return vals[order], vecs[:,order]
+
+vals, vecs = eigsorted(posterior_cov)
+theta = np.degrees(np.arctan2(*vecs[:,0][::-1]))
+
+nstd = 3.0
+
+height, width = 2 * nstd * np.sqrt(vals)
+ellip = Ellipse(xy=prediction_centroid, width=width, height=height, angle=theta, alpha=0.2, color='blue')
+ax.add_artist(ellip)
+ci_patch = Patch(color='blue',alpha=0.2, label='Confidence ellipse')
+
+plt.legend(handles=[dots[0], ci_patch], loc='lower right',fontsize=20)
+
+min_value = prediction_errors[1].min()
+max_value = prediction_errors[1].max()
+plt.ylim(1.25 * min_value, 1.1 * max_value )
+
+plt.gca().tick_params(axis='both', which='both', labelsize=25)
+plt.gca().set_xlabel('$\eta_1 - q_\mathbf{\mu}(\eta_1)$',fontsize=30)
+plt.gca().set_ylabel('$\eta_2 - q_\mathbf{\mu}(\eta_2)$',fontsize=30)
+plt.savefig("prediction_error_cov_plot.png",dpi=100)
+
+
