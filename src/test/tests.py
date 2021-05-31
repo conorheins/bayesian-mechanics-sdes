@@ -1,12 +1,11 @@
 import os
 import unittest
 
+import numpy as np
 import jax.numpy as jnp
 from jax import random, vmap, lax
 
-from src.utilities import initialize_random_friction
-
-RNG_key = random.PRNGKey(0)
+from src.utilities import initialize_random_friction_numpy
 
 N_VAR, dt, T, N_REAL = 4, 1e-3, 1000, 100 # global parameters for the process
 
@@ -17,13 +16,15 @@ class DiffusionTest(unittest.TestCase):
         """
         Validate that the vectorized dot product gives the intended parallelism
         """
+        RNG_key = random.PRNGKey(0)
 
         random_evals = 0.1 * random.uniform(RNG_key, shape = (N_VAR, ))
-        B = initialize_random_friction(random_evals)
+        RNG_key, next_key = random.split(RNG_key)
+        B = jnp.array(initialize_random_friction_numpy(np.array(random_evals)))
 
         f_vec = vmap(lambda x: -jnp.dot(B, x), in_axes = 1, out_axes = 1)
 
-        x_test = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(N_VAR), jnp.eye(N_VAR), shape = (N_REAL,) ), (1, 0))
+        x_test = jnp.transpose(random.multivariate_normal(next_key, jnp.zeros(N_VAR), jnp.eye(N_VAR), shape = (N_REAL,) ), (1, 0))
 
         vmapped_dot_ret = f_vec(x_test)
 
@@ -35,16 +36,22 @@ class DiffusionTest(unittest.TestCase):
         """
         Validate that the scan implementation of OU process integration is identical to that using a standard for loop
         """
+        RNG_key = random.PRNGKey(1)
 
         random_evals = 0.1 * random.uniform(RNG_key, shape = (N_VAR, ))
-        B = initialize_random_friction(random_evals)
-        sigma = 0.1* random.uniform(RNG_key, shape = (N_VAR, )) * jnp.diag(jnp.ones(N_VAR))
+        RNG_key, next_key = random.split(RNG_key)
+
+        B = jnp.array(initialize_random_friction_numpy(np.array(random_evals)))
+        
+        sigma = 0.1 * random.uniform(next_key, shape = (N_VAR, )) * jnp.diag(jnp.ones(N_VAR))
+        RNG_key, next_key = random.split(RNG_key)
 
         # initialize process starting state
-        x0 = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(N_VAR), jnp.eye(N_VAR), shape = (N_REAL,) ), (1, 0))
+        x0 = jnp.transpose(random.multivariate_normal(next_key, jnp.zeros(N_VAR), jnp.eye(N_VAR), shape = (N_REAL,) ), (1, 0))
+        RNG_key, next_key = random.split(RNG_key)
 
         # initialize random samples for the process
-        w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(N_VAR), jnp.eye(N_VAR), shape = (T, N_REAL) ), (0, 2, 1))
+        w = jnp.transpose(random.multivariate_normal(next_key, jnp.zeros(N_VAR), jnp.eye(N_VAR), shape = (T, N_REAL) ), (0, 2, 1))
 
         f_vec = vmap(lambda x: -jnp.dot(B, x), in_axes = 1, out_axes = 1)
         g_vec = vmap(lambda w: jnp.dot(sigma, w), in_axes = 1, out_axes = 1)
