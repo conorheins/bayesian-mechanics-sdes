@@ -3,63 +3,92 @@
 # from .utilities import initialize_random_friction
 
 # use these imports when running notebook style
+import os
+os.chdir('..')
+
 from diffusions import LinearProcess
-from utilities import initialize_random_friction
+from utilities import initialize_random_friction_numpy
 import jax.numpy as jnp
 from jax import random, vmap, lax
+import numpy as np 
 
 from matplotlib import pyplot as plt
 
 key = random.PRNGKey(0)
 
-n_var, dt, T, n_real = 4, 0.01, 10000, 100 # global parameters for the process
+n_var, dt, T, n_real = 4, 0.01, 100000, 100 # global parameters for the process
 
 random_evals = 0.1 * random.uniform(key, shape = (n_var, ))
-B = initialize_random_friction(random_evals)
-sigma = 0.1*random.uniform(key, shape = (n_var, )) * jnp.diag(jnp.ones(n_var))
+B_numpy = initialize_random_friction_numpy(np.array(random_evals))
+B = jnp.array(B_numpy)
+sigma = 0.01 * jnp.diag(jnp.ones(n_var))
+D = jnp.dot(sigma, sigma.T) / 2.0
 
+_, key = random.split(key)
  # initialize process starting state
-x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.eye(n_var), shape = (n_real,) ), (1, 0))
+x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), D, shape = (n_real,) ), (1, 0))
+
+test_process = LinearProcess(n_var, B, sigma)
+x_t = test_process.integrate(x0, dt = 0.01, T = T, N = n_real)
+
+import numpy as np
+
+x_t_single = np.zeros( (n_var, T) )
+
+B_numpy = np.array(B)
+
+w = np.random.normal(0, np.sqrt(dt), T * n_var).reshape(
+            [n_var, T ]) 
+sigma_numpy = np.array(sigma)
+
+x0_numpy = np.array(x0)
+
+for t in range(T):
+    if t == 0:
+        x_t_single[:,t] = x0_numpy[:,0] + dt * -B_numpy.dot(x0_numpy[:,0]) + sigma_numpy.dot(w[:,t])
+    else:
+        x_t_single[:,t] = x_t_single[:,t-1] + dt * -B_numpy.dot(x_t_single[:,t-1]) + sigma_numpy.dot(w[:,t])
+
 
 # initialize random samples for the process
-w = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.eye(n_var), shape = (T, n_real) ), (0, 2, 1))
+# w = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.eye(n_var), shape = (T, n_real) ), (0, 2, 1))
 
-f_vec = vmap(lambda x: -jnp.dot(B, x), in_axes = 1, out_axes = 1)
-g_vec = vmap(lambda w: jnp.dot(sigma, w), in_axes = 1, out_axes = 1)
+# f_vec = vmap(lambda x: -jnp.dot(B, x), in_axes = 1, out_axes = 1)
+# g_vec = vmap(lambda w: jnp.dot(sigma, w), in_axes = 1, out_axes = 1)
 
 # f_vec = lambda x: -jnp.dot(B, x)
 # g_vec = lambda w: jnp.dot(sigma, w)
 
-def integrate_w_scan(x0, w, dt, T, N): 
+# def integrate_w_scan(x0, w, dt, T, N): 
 
-    def one_step_int(carry, w_t):
+#     def one_step_int(carry, w_t):
 
-        x_past, dt, em_scalar = carry
-        x_next = x_past + dt * f_vec(x_past) + em_scalar * g_vec(w_t)
+#         x_past, dt, em_scalar = carry
+#         x_next = x_past + dt * f_vec(x_past) + em_scalar * g_vec(w_t)
 
-        return (x_next, dt, em_scalar), x_next
+#         return (x_next, dt, em_scalar), x_next
 
-    em_scalar = jnp.sqrt(dt)
+#     em_scalar = jnp.sqrt(dt)
 
-    _, x_t = lax.scan(one_step_int, (x0, dt, em_scalar), w, length = T) 
+#     _, x_t = lax.scan(one_step_int, (x0, dt, em_scalar), w, length = T) 
 
-    return x_t
+#     return x_t
 
-def integrate_w_for(x0, w, dt, T, N):
+# def integrate_w_for(x0, w, dt, T, N):
 
-    em_scalar = jnp.sqrt(dt)
+#     em_scalar = jnp.sqrt(dt)
 
-    x_t = []
-    for t in range(T):
-        if t == 0:
-            x_t.append( x0 + dt * f_vec(x0) + em_scalar * g_vec(w[t]) )
-        else:
-            x_t.append( x_t[t-1] + dt * f_vec(x_t[t-1]) + em_scalar * g_vec(w[t]) )
+#     x_t = []
+#     for t in range(T):
+#         if t == 0:
+#             x_t.append( x0 + dt * f_vec(x0) + em_scalar * g_vec(w[t]) )
+#         else:
+#             x_t.append( x_t[t-1] + dt * f_vec(x_t[t-1]) + em_scalar * g_vec(w[t]) )
     
-    return jnp.stack(x_t, 0)
+#     return jnp.stack(x_t, 0)
 
-scan_result = integrate_w_scan(x0, w, dt, T, n_real)
-for_result  = integrate_w_for(x0, w, dt, T, n_real)
+# scan_result = integrate_w_scan(x0, w, dt, T, n_real)
+# for_result  = integrate_w_for(x0, w, dt, T, n_real)
 
 # sigma = 0.01 * jnp.diag(jnp.ones(n_var))
 # D = jnp.dot(sigma, sigma.T) / 2.0

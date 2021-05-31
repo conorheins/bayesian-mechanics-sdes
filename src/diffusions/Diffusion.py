@@ -11,24 +11,17 @@ class DiffusionProcess(object):
         self.g = D_function
         self.d = dim
 
-    def one_step_int(self, carry, w_t):
-
-        x_past, dt, em_scalar = carry
-        x_next = x_past + dt * self.f(x_past) + em_scalar * self.g(w_t)
-
-        return (x_next, dt, em_scalar), x_next
-
     def integrate(self, x0, dt, T, N = 1): 
         
         em_scalar = jnp.sqrt(dt)
 
         # initialize random samples for the process
-        w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
+        w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), em_scalar * jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
 
         if N == 1:
             x0 = x0.reshape(self.d, 1)
 
-        _, x_t = lax.scan(self.one_step_int, (x0, dt, em_scalar), w, length = T) 
+        _, x_t = lax.scan(self.one_step_int, (x0, dt), w, length = T) 
 
         return x_t
 
@@ -66,21 +59,54 @@ class LinearProcess(DiffusionProcess):
 
         D_func_single = lambda w: jnp.dot(self.sigma, w)
         self.g = vmap(D_func_single, in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
+    
+    def one_step_int(self, carry, w_t):
+
+        x_past, dt = carry
+        x_next = x_past + dt * self.f(x_past) +  self.g(w_t)
+
+        return (x_next, dt), x_next
 
 
 class NonlinearProcess(DiffusionProcess):
 
-    # def __init__(self, name):
-    #     self.name = name
+    def __init__(self, dim, friction, volatility):
+        """
+        Arguments:
+        `dim` [int]: dimensionality of the process (e.g. a vector valued process will have `dim > 1`)
+        `friction` [function]: flow function of the process
+        `volatility` [function]: diffusion/volatility function of the process 
+        """
 
-    def __init__(self, f, g, name):
-        super().__init__(f, g)
-       
-    # def integrate(self, dt, T):  
-    #     pass
+        self.d = dim
+        self.B = friction  
+        self.S = volatility
 
-    # def setters(self, args):
-    #     pass
+        self._set_flow()
+        self._set_D_func()
 
-    # def getters(self, args):
-    #     pass
+        super().__init__(self.f,self.g, self.d)
+    
+    def _set_flow(self):
+        """
+        Sets the deterministic part of the flow (drift), given the drift function of the process
+        """
+
+        self.f = vmap(lambda x: self.B(x), in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
+    
+    def _set_D_func(self):
+        """
+        Sets the stochastic / non-deterministic part of the flow (diffusion), given the volatility of the process
+        """
+
+        self.g = vmap(lambda x: self.S(x), in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
+    
+    def one_step_int(self, carry, w_t):
+        """
+        Integration for nonlinear diffusion, where the noise is state dependent
+        """
+
+        x_past, dt = carry
+        x_next = x_past + dt * self.f(x_past) + self.g(x_past, w_t)
+
+        return (x_next, dt), x_next
