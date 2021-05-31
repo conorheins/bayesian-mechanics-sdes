@@ -13,10 +13,10 @@ class DiffusionProcess(object):
 
     def one_step_int(self, carry, w_t):
 
-        x_past, em_scalar = carry
-        x_next = x_past + em_scalar * (self.f(x_past) + self.g(w_t))
+        x_past, dt, em_scalar = carry
+        x_next = x_past + dt * self.f(x_past) + em_scalar * self.g(w_t)
 
-        return (x_next, em_scalar), x_next
+        return (x_next, dt, em_scalar), x_next
 
     def integrate(self, x0, dt, T, N = 1): 
         
@@ -28,7 +28,7 @@ class DiffusionProcess(object):
         if N == 1:
             x0 = x0.reshape(self.d, 1)
 
-        _, x_t = lax.scan(self.one_step_int, (x0, em_scalar), w, length = T) 
+        _, x_t = lax.scan(self.one_step_int, (x0, dt, em_scalar), w, length = T) 
 
         return x_t
 
