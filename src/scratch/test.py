@@ -16,7 +16,7 @@ from matplotlib import pyplot as plt
 
 key = random.PRNGKey(0)
 
-n_var, dt, T, n_real = 4, 0.01, 100000, 100 # global parameters for the process
+n_var, dt, T, n_real = 6, 0.01, 100000, 1000 # global parameters for the process
 
 random_evals = 0.1 * random.uniform(key, shape = (n_var, ))
 B_numpy = initialize_random_friction_numpy(np.array(random_evals))
@@ -29,7 +29,10 @@ _, key = random.split(key)
 x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), D, shape = (n_real,) ), (1, 0))
 
 test_process = LinearProcess(n_var, B, sigma)
+
 x_t = test_process.integrate(x0, dt = 0.01, T = T, N = n_real)
+
+# %timeit x_t = test_process.integrate(x0, dt = 0.01, T = 2, N = n_real)
 
 import numpy as np
 

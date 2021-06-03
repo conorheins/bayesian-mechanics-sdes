@@ -9,6 +9,8 @@ from src.utilities import initialize_random_friction_numpy
 
 N_VAR, dt, T, N_REAL = 4, 1e-3, 1000, 100 # global parameters for the process
 
+TOL = 1e-6
+
 class DiffusionTest(unittest.TestCase):
 
     def test_vmapped_dot_product(self):
@@ -87,7 +89,8 @@ class DiffusionTest(unittest.TestCase):
         scan_result = integrate_w_scan(x0, w, dt, T, N_REAL)
         for_result  = integrate_w_for(x0, w, dt, T, N_REAL)
         
-        self.assertTrue(jnp.absolute(scan_result - for_result).max() < 1e-4)
+        # self.assertTrue(jnp.absolute(scan_result - for_result).max() < TOL)
+        self.assertTrue(jnp.isclose(scan_result, for_result, atol = TOL).all())
 
 if __name__ == "__main__":
 
