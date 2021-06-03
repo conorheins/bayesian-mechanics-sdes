@@ -1,5 +1,5 @@
 import jax.numpy as jnp
-from jax import lax, random, vmap
+from jax import jit, lax, random, vmap
 
 RNG_key = random.PRNGKey(0)
 
@@ -22,6 +22,7 @@ class DiffusionProcess(object):
             x0 = x0.reshape(self.d, 1)
 
         _, x_t = lax.scan(self.one_step_int, (x0, dt), w, length = T) 
+        # _, x_t = lax.scan(jit(self.one_step_int), (x0, dt), w, length = T) # JIT-ing the integration step seemed to slow it down, strangely?
 
         return x_t
 
@@ -50,16 +51,18 @@ class LinearProcess(DiffusionProcess):
         """
 
         flow_single = lambda x: -jnp.dot(self.B, x)
-        self.f = vmap(flow_single, in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
-    
+        # self.f = vmap(flow_single, in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
+        self.f = jit(vmap(flow_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
+
     def _set_D_func(self):
         """
         Sets the stochastic / non-deterministic part of the flow (diffusion), given the volatility of the process
         """
 
         D_func_single = lambda w: jnp.dot(self.sigma, w)
-        self.g = vmap(D_func_single, in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
-    
+        # self.g = vmap(D_func_single, in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
+        self.g = jit(vmap(D_func_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
+
     def one_step_int(self, carry, w_t):
 
         x_past, dt = carry
