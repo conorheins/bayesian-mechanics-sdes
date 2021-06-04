@@ -133,24 +133,13 @@ plt.figure(2)
 plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free energy landscape
-#plt.colorbar()
-#plt.xlabel('$x_1$')
-#plt.ylabel('$x_2$')
-# plt.plot(sensory, mu @ blanket, c='white')  # plot expected internal state as a function of blanket states
-#with sns.color_palette("hot", n_colors=10):
-#    plt.plot(x[:, :, n])
+
 plt.suptitle('Full dynamic')
 plt.title(r'$dx_t = b_{rev}(x_t)dt+b_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$')
-#plt.suptitle('Time-irreversible')
-#plt.title('$dx_t = b_{irrev}(x_t)dt$')
+
 OU.plot_hot_colourline(x[0, :, n].reshape(T), x[1, :, n].reshape(T), lw=0.5)
 plt.savefig("Helmholtz_complete.png", dpi=100)
-#plt.savefig("Helmholtz_dissipative.png", dpi=100)
-#plt.savefig("Helmholtz_conservative.png", dpi=100)
 
-# plt.text(s='$\mathbf{\mu}(b)$', x=x[db, 0, 0] * 0.7, y=mu * x[db, 0, 0] * 0.7 + 0.3, color='white')
-#plt.text(s='$b_t$', x=x[ds, 1, n] - 1, y=x[da, 1, n], color='black')
-#plt.savefig("Sample_perturbed_6wayOU.png")
 
 plt.figure(3)
 plt.clf()
@@ -182,22 +171,11 @@ Plot trajectory conservative simulation
 plt.figure(4)
 plt.clf()
 plt.title('')
-plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free energy landscape
-#plt.colorbar()
-#plt.xlabel('$x_1$')
-#plt.ylabel('$x_2$')
-# plt.plot(sensory, mu @ blanket, c='white')  # plot expected internal state as a function of blanket states
-#with sns.color_palette("hot", n_colors=10):
-#    plt.plot(x[:, :, n])
+plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-irreversible')
 plt.title(r'$dx_t = b_{irrev}(x_t)dt$')
 OU.plot_hot_colourline(x[0, :, n].reshape(T), x[1, :, n].reshape(T), lw=0.5)
-#plt.savefig("Helmholtz_dissipative.png", dpi=100)
 plt.savefig("Helmholtz_conservative.png", dpi=100)
-
-# plt.text(s='$\mathbf{\mu}(b)$', x=x[db, 0, 0] * 0.7, y=mu * x[db, 0, 0] * 0.7 + 0.3, color='white')
-#plt.text(s='$b_t$', x=x[ds, 1, n] - 1, y=x[da, 1, n], color='black')
-#plt.savefig("Sample_perturbed_6wayOU.png")
 
 plt.figure(5)
 plt.clf()
@@ -229,23 +207,12 @@ Plot trajectory dissipative simulation
 plt.figure(6)
 plt.clf()
 plt.title('')
-plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free energy landscape
-#plt.colorbar()
-#plt.xlabel('$x_1$')
-#plt.ylabel('$x_2$')
-# plt.plot(sensory, mu @ blanket, c='white')  # plot expected internal state as a function of blanket states
-#with sns.color_palette("hot", n_colors=10):
-#    plt.plot(x[:, :, n])
+plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-reversible')
 plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$')
-#plt.suptitle('Time-irreversible')
-#plt.title('$dx_t = b_{irrev}(x_t)dt$')
 OU.plot_hot_colourline(x[0, :, n].reshape(T), x[1, :, n].reshape(T), lw=0.5)
 plt.savefig("Helmholtz_dissipative.png", dpi=100)
 
-# plt.text(s='$\mathbf{\mu}(b)$', x=x[db, 0, 0] * 0.7, y=mu * x[db, 0, 0] * 0.7 + 0.3, color='white')
-#plt.text(s='$b_t$', x=x[ds, 1, n] - 1, y=x[da, 1, n], color='black')
-#plt.savefig("Sample_perturbed_6wayOU.png")
 
 plt.figure(7)
 plt.clf()

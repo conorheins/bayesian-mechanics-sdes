@@ -2,7 +2,6 @@
 Simulations synchroinsation map, 3 way OU process
 '''
 
-import OU_process.OUprocess_functions as OU
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -12,8 +11,7 @@ import matplotlib.pyplot as plt
 #plt.rcParams['text.latex.preamble']=[r"\usepackage{amsmath}"]
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}     # setup matplotlib to use latex for output      # change this if using xetex or lautex
 plt.style.use('seaborn-white')
-import scipy
-
+from scipy import stats
 '''
 Setup
 '''
@@ -86,7 +84,7 @@ for i in range(len(bins)):
 
 plt.figure(1)
 plt.clf()
-plt.suptitle('Synchronisation map')
+#plt.suptitle('Synchronisation map')
 plt.scatter(bins[j == 1], sync_bold_mu[j == 1], s=1, alpha=0.5,
             label='Prediction: $\sigma(\mathbf{\mu}(b))$')  # scatter plot theoretical expected internal state
 plt.scatter(bins[j == 1], bold_eta_empirical[j == 1], s=1, alpha=0.5,
@@ -94,15 +92,9 @@ plt.scatter(bins[j == 1], bold_eta_empirical[j == 1], s=1, alpha=0.5,
 plt.xlabel('Blanket state space $\mathcal{B}$')
 plt.ylabel('External state space $\mathcal{E}$')
 plt.legend(loc='upper right')
-cor = scipy.stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
+cor = stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
 plt.title(f'Pearson correlation = {np.round(cor[0],6)}...')
 #plt.xlim(-4, 4)
 #plt.ylim(-4, 4)
-plt.savefig("Prediction_sync_map_example.png")
-
-
-
-
-
-
+plt.savefig("Prediction_sync_map_example.png", dpi=100)
 
