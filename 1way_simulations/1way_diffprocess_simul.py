@@ -133,12 +133,13 @@ plt.suptitle('Joint probability at two different times')
 plt.xlabel('$x_{t-1}$')
 plt.ylabel('$x_t$')
 
+
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
 # Custom the inside plot: options are: “scatter” | “reg” | “resid” | “kde” | “hex”
 sns.set(style="white", color_codes=True)
-sns.jointplot(x=x[0, t, :], y=x[0, -1, :], kind='hex', space=0, cmap='Reds', color='salmon')
-plt.xlabel('$x_{s}$',labelpad=0)
+sns.jointplot(x=x[0, t, :], y=x[0, -1, :], kind='hex', space=0, cmap='Blues', color='skyblue')
+plt.xlabel('$x_s$',labelpad=0)
 plt.ylabel('$x_t$',labelpad=0)
 #plt.text(s='$p(x_{s},x_{t})$', x=1, y=-1, color='black',size='large')
 #plt.text(s='$p(x_{s},x_{t})$', x=4, y=-1, color='black',size='large',zorder=10)

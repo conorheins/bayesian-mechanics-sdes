@@ -188,7 +188,7 @@ plt.ylabel('blanket state $b_2$')
 OU.plot_hot_colourline(x[ds, :, n].reshape(T), x[da, :, n].reshape(T), lw=0.5)
 # plt.text(s='$\mathbf{\mu}(b)$', x=x[db, 0, 0] * 0.7, y=mu * x[db, 0, 0] * 0.7 + 0.3, color='white')
 plt.text(s='$b_t$', x=x[ds, 1, n] - 1, y=x[da, 1, n], color='black')
-plt.savefig("Sample_perturbed_6wayOU.png")
+plt.savefig("Sample_perturbed_6wayOU.png", dpi=100)
 
 '''
 Figure 3: average F(b, bold mu) over trajectories
@@ -210,7 +210,7 @@ plt.text(s='$F(b_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.m
          color='black')
 plt.xlabel('Time')
 plt.ylabel('Free energy $F(b, \mathbf{\mu})$')
-plt.savefig("FE_vs_time_perturbed_6wayOU.png")
+plt.savefig("FE_vs_time_perturbed_6wayOU.png", dpi=100)
 
 '''
 OU process perturbed sensory states simulation 
@@ -268,7 +268,7 @@ OU.plot_hot_colourline(x[ds, :, n].reshape(T), x[da, :, n].reshape(T), lw=0.5)
 plt.text(s='$\mathbf{a}(s)$', x=np.min(x[ds, :, :]) - 0.7, y=S[da, ds] / S[ds, ds] * (np.min(x[ds, :, :]) - 0.7) + 0.4,
          color='white')
 plt.text(s='$(s_t,a_t)$', x=x[ds, 1, n] - 1, y=x[da, 1, n] + 0.2, color='black')
-plt.savefig("Sample_perturbed_AI_6wayOU.png")
+plt.savefig("Sample_perturbed_AI_6wayOU.png", dpi=100)
 
 '''
 Figure 5: average F(b, bold mu) over trajectories
@@ -290,4 +290,4 @@ plt.text(s='$F(s_t, a_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * 
          color='black')
 plt.xlabel('Time')
 plt.ylabel('Free energy $F(s,a, \mathbf{\mu})$')
-plt.savefig("FE_vs_time_perturbed_AI_6wayOU.png")
+plt.savefig("FE_vs_time_perturbed_AI_6wayOU.png", dpi=100)

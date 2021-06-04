@@ -31,6 +31,7 @@ class OU_process(object):
     def simulation(self, x0, epsilon=0.01, T=100, N=1):  # run OU process for multiple trajectories
         w = np.random.normal(0, np.sqrt(epsilon), (T - 1) * self.d * N).reshape(
             [self.d, T - 1, N])  # random fluctuations
+        w=np.round(w, decimals=14)
         # sqrt epsilon because standard deviation, but epsilon as covariance
         x = np.empty([self.d, T, N])  # store values of the process
         if x0.shape == x[:, 0, 0].shape:
@@ -42,8 +43,11 @@ class OU_process(object):
         for t in range(1, T):
             x[:, t, :] = x[:, t - 1, :] - epsilon * np.tensordot(self.B, x[:, t - 1, :], axes=1) \
                          + np.tensordot(self.sigma, w[:, t - 1, :], axes=1)
+            x= np.round(x,decimals= 14)
             if np.count_nonzero(np.isnan(x)):
-                raise TypeError("nan: process went too far: consider increasing the eigenvalues of the drift matrix")
+                print(x)
+                print("Warning nan: process went too far")
+                return x[:, :(t - 1), :]
         return x
 
     def simulation_float128(self, x0, epsilon=0.01, T=100, N=1):  # run OU process for multiple trajectories float 128
