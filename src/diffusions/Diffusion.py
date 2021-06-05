@@ -1,5 +1,6 @@
 import jax.numpy as jnp
 from jax import jit, lax, random, vmap
+from functools import partial
 
 RNG_key = random.PRNGKey(0)
 
@@ -11,18 +12,53 @@ class DiffusionProcess(object):
         self.g = D_function
         self.d = dim
 
-    def integrate(self, x0, dt, T, N = 1): 
+    # def integrate(self, x0, dt, T, N = 1): 
         
-        em_scalar = jnp.sqrt(dt)
+    #     em_scalar = jnp.sqrt(dt)
 
-        # initialize random samples for the process
+    #     # initialize random samples for the diffusion part of the process (the derivative of Brownian motion, dB/dt)
+    #     w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), em_scalar * jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
+
+    #     if N == 1:
+    #         x0 = x0.reshape(self.d, 1)
+
+    #     _, x_t = lax.scan(self.one_step_int, (x0, dt), w, length = T) 
+
+    #     return x_t
+    
+    def integrate(self, T, N, dt, *scan_args): 
+        """
+        Generic integration function for the diffusion process
+        Arguments:
+        ==========
+        `T` [int] : number of timesteps to realize
+        `N` [int] : number of parallel processes / sample paths to realize
+        `scan_args` [tuple]: positional arguments that are passed to stochastic 
+            integration (e.g. for an OU process, this is just the state initial state `x0` and the integration window `dt`)
+        
+        Returns:
+        ========
+        `x_t` [JAX DeviceArray]: multidimensional array storing the history of the samples paths over time, for 
+        different parallel realizations
+        """
+        
+        em_scalar = jnp.sqrt(dt) # Euler-Maruyama scalar for noise variance during integration
+
+        # initialize random samples for the diffusion part of the process (the derivative of Brownian motion, dB/dt)
         w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), em_scalar * jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
 
         if N == 1:
             x0 = x0.reshape(self.d, 1)
 
-        _, x_t = lax.scan(self.one_step_int, (x0, dt), w, length = T) 
-        # _, x_t = lax.scan(jit(self.one_step_int), (x0, dt), w, length = T) # JIT-ing the integration step seemed to slow it down, strangely?
+        integration_func = jit(partial(self.one_step_int, dt)) # re-define one-step integration function for the input `dt` fixed
+
+        def scan_fn(carry, w_t):
+
+            next_carry = integration_func(*carry, w_t)
+
+            return (next_carry, ), next_carry
+
+        _, x_t = lax.scan(scan_fn, scan_args, w, length = T) 
 
         return x_t
 
@@ -51,7 +87,6 @@ class LinearProcess(DiffusionProcess):
         """
 
         flow_single = lambda x: -jnp.dot(self.B, x)
-        # self.f = vmap(flow_single, in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
         self.f = jit(vmap(flow_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
 
     def _set_D_func(self):
@@ -60,16 +95,11 @@ class LinearProcess(DiffusionProcess):
         """
 
         D_func_single = lambda w: jnp.dot(self.sigma, w)
-        # self.g = vmap(D_func_single, in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
         self.g = jit(vmap(D_func_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
+    
+    def one_step_int(self, dt, x_past, w_t):
 
-    def one_step_int(self, carry, w_t):
-
-        x_past, dt = carry
-        x_next = x_past + dt * self.f(x_past) +  self.g(w_t)
-
-        return (x_next, dt), x_next
-
+        return x_past + dt * self.f(x_past) + self.g(w_t)
 
 class NonlinearProcess(DiffusionProcess):
 
@@ -95,21 +125,30 @@ class NonlinearProcess(DiffusionProcess):
         Sets the deterministic part of the flow (drift), given the drift function of the process
         """
 
-        self.f = vmap(lambda x: self.B(x), in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
+        self.f = jit(vmap(lambda x: self.B(x), in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
+
+        # if self.d == 1:
+        #     self.f = jit(lambda x: self.B(x))
+        # else:
+        #     self.f = jit(vmap(lambda x: self.B(x), in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
     
     def _set_D_func(self):
         """
         Sets the stochastic / non-deterministic part of the flow (diffusion), given the volatility of the process
         """
 
-        self.g = vmap(lambda x: self.S(x), in_axes = 1, out_axes = 1) # this assumes that the input array is of size (dim, num_parallel_samples)
+        D_func_single = lambda x, w: jnp.dot(self.S(x), w)
+        self.g = jit(vmap(D_func_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
     
-    def one_step_int(self, carry, w_t):
+        # if self.d == 1:
+        #     self.g = jit(lambda x, w: self.S(x) * w)
+        # else:
+        #     D_func_single = lambda x, w: jnp.dot(self.S(x), w)
+        #     self.g = jit(vmap(D_func_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
+    
+    def one_step_int(self, dt, x_past, w_t):
         """
         Integration for nonlinear diffusion, where the noise is state dependent
         """
 
-        x_past, dt = carry
-        x_next = x_past + dt * self.f(x_past) + self.g(x_past, w_t)
-
-        return (x_next, dt), x_next
+        return x_past + dt * self.f(x_past) + self.g(x_past, w_t)
