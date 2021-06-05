@@ -101,7 +101,8 @@ def divQ(y):
 
 # drift
 def drift(y):
-    return -(D(y) + Q(y)) @ Pi @ y + divD(y) + divQ(y)
+    return -(D(y)) @ Pi @ y - divD(y)
+    #return -(D(y) + Q(y)) @ Pi @ y + divD(y) + divQ(y)
 
 
 # Setting up the diffusion process

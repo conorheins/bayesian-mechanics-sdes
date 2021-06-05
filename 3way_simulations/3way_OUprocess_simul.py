@@ -163,7 +163,7 @@ cor = scipy.stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
 plt.title(f'Pearson correlation = {np.round(cor[0], 6)}...')
 # plt.xlim(-4, 4)
 # plt.ylim(-4, 4)
-plt.savefig("sync_map_3wayOUprocess.png")
+plt.savefig("sync_map_3wayOUprocess.png", dpi=100)
 
 
 
@@ -208,7 +208,7 @@ blanket = np.linspace(np.min(x[db, :, :]) - 1, np.max(x[db, :, :]) + 0.5, 100)  
 
 Z = F(internal, blanket)  # free energy up to additive constant
 
-n = 0  # which sample path to show (between 0 and N)
+n = 3  # which sample path to show (between 0 and N)
 
 plt.figure(2)
 plt.clf()
@@ -220,8 +220,8 @@ plt.xlabel('blanket state $b$')
 plt.plot(blanket, float(mu) * blanket, c='white')  # plot expected internal state as a function of blanket states
 OU.plot_hot_colourline(x[db, :, n].reshape([T]), x[di, :, n].reshape([T]), lw=0.5)
 plt.text(s='$\mathbf{\mu}(b)$', x=np.min(x[db, :, :]) - 0.7, y=mu * (np.min(x[db, :, :]) - 0.7) + 0.2, color='white')
-plt.text(s='$(b_t, \mu_t)$', x=x[db, 1, n] - 2, y=x[di, 1, n], color='black')
-plt.savefig("Sample_perturbed_3wayOU.png")
+plt.text(s='$(b_t, \mu_t)$', x=x[db, 0, n] - 2, y=x[di, 0, n], color='black')
+plt.savefig("Sample_perturbed_3wayOU.png", dpi=100)
 
 '''
 Figure 3: average free energy over trajectories
@@ -236,10 +236,10 @@ mean_F = np.mean(F_z, axis=1)  # take mean over trajectories
 
 plt.figure(3)
 plt.clf()
-plt.title('Free energy over time')
+plt.title('Average free energy over time')
 OU.plot_hot_colourline(np.arange(T), mean_F)
 xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mu_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F) - mean_F[xlabel]), color='black')
 plt.xlabel('Time')
-plt.ylabel('Free energy $F(b, \mu)$')
-plt.savefig("FE_vs_time_perturbed_3wayOU.png")
+plt.ylabel('Free energy $F(b_t, \mu_t)$')
+plt.savefig("FE_vs_time_perturbed_3wayOU.png", dpi=100)
