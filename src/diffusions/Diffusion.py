@@ -2,7 +2,7 @@ import jax.numpy as jnp
 from jax import jit, lax, random, vmap
 from functools import partial
 
-RNG_key = random.PRNGKey(0)
+default_key = random.PRNGKey(0)
 
 class DiffusionProcess(object):
 
@@ -26,7 +26,7 @@ class DiffusionProcess(object):
 
     #     return x_t
     
-    def integrate(self, T, N, dt, *scan_args): 
+    def integrate(self, T, N, dt, *scan_args, rng_key = None): 
         """
         Generic integration function for the diffusion process
         Arguments:
@@ -43,6 +43,11 @@ class DiffusionProcess(object):
         """
         
         em_scalar = jnp.sqrt(dt) # Euler-Maruyama scalar for noise variance during integration
+
+        if rng_key is None:
+            RNG_key = default_key
+        else:
+            RNG_key = rng_key
 
         # initialize random samples for the diffusion part of the process (the derivative of Brownian motion, dB/dt)
         w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), em_scalar * jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
