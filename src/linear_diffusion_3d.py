@@ -1,3 +1,4 @@
+import os
 from .diffusions import LinearProcess
 from .utilities import initialize_random_friction_numpy, compute_FE_landscape, plot_hot_colourline
 import jax.numpy as jnp
