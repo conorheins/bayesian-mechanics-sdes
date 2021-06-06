@@ -9,7 +9,7 @@ os.chdir('..')
 from diffusions import LinearProcess, NonlinearProcess
 from utilities import initialize_random_friction_numpy
 import jax.numpy as jnp
-from jax import random, vmap, grad, jacfwd, lax
+from jax import random, vmap, grad, jacfwd, lax, jit
 import numpy as np 
 # import autograd.numpy as np
 # from autograd import elementwise_grad as egrad
@@ -28,7 +28,7 @@ B = jnp.array(B_numpy)
 sigma = 0.01 * jnp.diag(jnp.ones(n_var))
 D = jnp.dot(sigma, sigma.T) / 2.0
 
- # initialize process starting state
+# initialize process starting state
 x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), D, shape = (n_real,) ), (1, 0))
 _, key = random.split(key)
 
@@ -41,86 +41,75 @@ x_out = ou_process.integrate(T, n_real, dt, x0)
 Setting up the diffusion process
 '''
 
-
 key = random.PRNGKey(0)
 
 n_var, dt, T, n_real = 1, 0.01, 100000, 1000 # global parameters for the process
 
-# Pi = jnp.array([[1.0]])
-Pi = jnp.array([1.0])
+Pi = jnp.array([[1.0]])
 
-# volatility
-
+# state dependent volatility
 def sigma(y):
-    return  jnp.log(jnp.abs(y) + 0.5)[None, ...]
+    return  jnp.log(jnp.abs(y) + 0.5)[None,...] # have to expand dims to make it technically a 1 x 1 volatility matrix
 
-def D(y):
-    return sigma(y).dot(sigma(y)) / 2.0
-    
-# sigma = lambda y: jnp.log(jnp.abs(y) + 0.5)
+# Diffusion tensor
+def D_vec(y):
+    return (sigma(y) @ sigma(y).T) / 2.0
 
-# diffusion
-# D = lambda y: sigma(y) + sigma(y) / 2.0
-
-
-# divergence of diffusion 
-
-
-# grad_sigma_1el = grad(sigma) # elementwise gradient of sigma
-# grad_sigma = vmap(grad_sigma_1el) 
-# divD = lambda y: sigma(y) * jnp.apply_along_axis(grad_sigma, 0, y)
+jac_sigma = jacfwd(sigma_vec) # elementwise gradient of sigma
+divD_vec = lambda y: sigma_vec(y) @ jnp.trace(jac_sigma(y))
 
 # solenoidal flow
-Q = lambda y: 0.0
+Q = lambda y: jnp.array([0.0])
 
 # divergence of solenoidal flow
-divQ = lambda y: 0.0
+divQ = lambda y: jnp.array([0.0])
 
 # drift
-drift = lambda y: -(D(y) + Q(y)) * Pi * y + divD(y) + divQ(y)
+drift = lambda y: -(D_vec(y) + Q(y)) @ Pi @ y + divD_vec(y) + divQ(y)
 
-diff_process = NonlinearProcess(n_var, drift, sigma)
+diff_process = NonlinearProcess(n_var, drift, sigma_vec)
 
 # Setting up the initial condition
-x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.linalg.inv(Pi[...,None]), shape = (n_real,) ), (1, 0))
+x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.linalg.inv(Pi), shape = (n_real,) ), (1, 0))
 _, key = random.split(key)
 
-x_out = diff_process.integrate(500, n_real, dt, x0)
+x_out = diff_process.integrate(T, n_real, dt, x0)
 
-# w = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.sqrt(dt) * jnp.eye(n_var), shape = (T, n_real) ), (0, 2, 1))
-
-# D_func_single = lambda x, w: sigma(x) * w
-# D_func_single(x0, w[0])
-# vmapped_D_func = vmap(D_func_single, in_axes = 1, out_axes = 1)
-# self.g(x_past, w_t)
-
-# diff_process.f(x0)
-# diff_process.g(x0, w[0])
-
-# Setting up the diffusion process
-# process = diffusion.diffusion_process(dim=dim, drift=drift, volatility=sigma)  # create process
-
-'''
-Run simulation
-'''
-
-epsilon = 10 ** (-2)  # time-step
-T = 5 * 10 ** 2  # number of time-steps
-N = 10 ** 5  # number of trajectories
-
-# Setting up the initial condition
-x0 = np.random.normal(loc=np.zeros(dim), scale=np.sqrt(Pi ** (-1)), size=[N]).reshape(
-    [dim, N])  # stationary initial condition
-
-
-
-
-
-
+# 2D histogram of stationary distribution
+plt.figure()
+plt.hist(x0[0, :], bins=100)
+plt.suptitle('Initial (stationary) distribution')
+plt.xlabel('x axis')
+plt.ylabel('y axis')
 
 
 
 # %% OLD STUFF
+
+# Pi = jnp.array([1.0])
+
+# volatility
+
+# single element version
+
+# def sigma_1el(y):
+#     return  jnp.log(jnp.abs(y) + 0.5)
+
+# def D_1el(y):
+#     return sigma_1el(y) * sigma_1el(y) / 2.0
+
+# # divergence of diffusion
+
+# grad_sigma_1el = grad(sigma_1el)
+# grad_sigma = vmap(grad_sigma_1el) 
+# divD_1el = lambda y: sigma_1el(y) * jnp.apply_along_axis(grad_sigma, 0, y)
+
+# divD_1el(x0)
+
+# vectorized version
+
+# divD_vec = lambda y: sigma_vec(y) * jnp.trace(jac_sigma(y)).sum(axis=0,keepdims=True)
+
 
 # x_t = test_process.integrate(T, n_real, x0, dt)
 
