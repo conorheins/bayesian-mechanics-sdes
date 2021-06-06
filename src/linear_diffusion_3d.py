@@ -11,6 +11,10 @@ key = random.PRNGKey(0)
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
 
+figures_folder = 'figures'
+if not os.path.isdir(figures_folder):
+    os.mkdir(figures_folder)
+
 '''
 Setting up the steady-state
 '''
@@ -48,7 +52,6 @@ assert S[mu_dim, b_dim] != 0, "Synchronisation map not well defined: bold_mu(b) 
 b_mu = S[mu_dim, b_dim] * S[b_dim, b_dim] ** (-1)  # expected internal state
 b_eta = S[eta_dim, b_dim] * S[b_dim, b_dim] ** (-1)  # expected external state
 sync = Pi[eta_dim, eta_dim] ** (-1) * Pi[eta_dim, b_dim] * Pi[mu_dim, b_dim] ** (-1) * Pi[mu_dim, mu_dim]  # sync map
-# sync = S[de, db] * S[di, db] ** (-1)  # sync map
 
 '''
 Setting up the OU process
@@ -58,10 +61,6 @@ Setting up the OU process
 sigma = jnp.array([ [2, 1.5, 0.5],
                     [0., 3., 2.],
                     [0., 0., 2.] ]) #selected non-degenerate noise
-
-# sigma = np.array([  [2, 1.5, 0.5],
-#                      [0., 0., 2.0]
-#                      [0., 0., 2.0] ]) #selected degenerate noise
 
 # see whether noise is degenerate or not
 print(f'det sigma = {det(sigma)}')
@@ -156,7 +155,7 @@ plt.ylabel('External state space $\mathcal{E}$')
 # cor = scipy.stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
 # plt.title(f'Pearson correlation = {np.round(cor[0], 6)}...')
 plt.legend(loc='upper right')
-plt.savefig("sync_map_3wayOUprocess.png", dpi=100)
+plt.savefig(os.path.join(figures_folder, "sync_map_3wayOUprocess.png"), dpi=100)
 plt.close()
 
 '''
@@ -208,7 +207,7 @@ plot_hot_colourline(blanket_trajectory, mu_trajectory, lw=0.5)
 plt.text(s='$\mathbf{\mu}(b)$', x= x[:, b_dim, :].min()  - 0.7, y= b_mu * (x[:, b_dim, :].min() - 0.7) + 0.2, color='white')
 
 plt.text(s='$(b_t, \mu_t)$', x=blanket_trajectory[0] - 2, y=mu_trajectory[0], color='black')
-plt.savefig("Sample_perturbed_3wayOU.png", dpi=100)
+plt.savefig(os.path.join(figures_folder,"Sample_perturbed_3wayOU.png"), dpi=100)
 plt.close()
 
 
