@@ -187,14 +187,12 @@ n = 0  # which sample path to show (between 0 and N)
 
 plt.figure(2)
 plt.clf()
-plt.title('Free energy $F(b_t, \mathbf{\mu}_t)$')
+plt.title('Free energy $F(b_t, \mathbf{\mu}_t)$', fontsize=13.5)
 plt.contourf(sensory, active, Z, levels=100, cmap='turbo')  # plotting the free energy landscape
 plt.colorbar()
-plt.xlabel('blanket state $b_1$')
-plt.ylabel('blanket state $b_2$')
-# plt.plot(sensory, mu @ blanket, c='white')  # plot expected internal state as a function of blanket states
+plt.xlabel('blanket state $b_1$', fontsize=12)
+plt.ylabel('blanket state $b_2$', fontsize=12)
 OU.plot_hot_colourline(x[ds, :, n].reshape(T), x[da, :, n].reshape(T), lw=0.5)
-# plt.text(s='$\mathbf{\mu}(b)$', x=x[db, 0, 0] * 0.7, y=mu * x[db, 0, 0] * 0.7 + 0.3, color='white')
 plt.text(s='$b_t$', x=x[ds, 1, n] - 1, y=x[da, 1, n]+0.2, color='black')
 plt.savefig("Sample_perturbed_6wayOU.png")
 
@@ -211,13 +209,13 @@ mean_F = np.mean(F_z, axis=1)  # take mean over trajectories
 
 plt.figure(3)
 plt.clf()
-plt.title('Average free energy over time')
+plt.title('Average free energy over time', fontsize=13.5)
 OU.plot_hot_colourline(np.arange(T), mean_F)
 xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F) - mean_F[xlabel]),
          color='black')
-plt.xlabel('Time')
-plt.ylabel('Free energy $F(b_t, \mathbf{\mu}_t)$')
+plt.xlabel('Time', fontsize=12)
+plt.ylabel('Free energy $F(b_t, \mathbf{\mu}_t)$', fontsize=12)
 plt.savefig("FE_vs_time_perturbed_6wayOU.png")
 
 
@@ -293,7 +291,7 @@ q_mu = sync.dot(mu_flat) # predicted external states, parameterised by instantan
 
 fig, ax = plt.subplots(figsize=(14,10))
 
-plt.title('Prediction errors $\eta - \mathbf{\mu}$',fontsize=26, pad = 10)
+plt.title('Prediction errors $\eta - \mathbf{\mu}$',fontsize=30, pad = 10)
 
 prediction_errors = eta_flat - q_mu # prediction errors - difference between realization of external state and 'predicted' external state
 
