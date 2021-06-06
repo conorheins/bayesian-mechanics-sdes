@@ -187,7 +187,7 @@ n = 0  # which sample path to show (between 0 and N)
 
 plt.figure(2)
 plt.clf()
-plt.title('Free energy $F(b_t, \mathbf{\mu}_t)$', fontsize=13.5)
+plt.title('Free energy $F(b, \mathbf{\mu})$', fontsize=13.5)
 plt.contourf(sensory, active, Z, levels=100, cmap='turbo')  # plotting the free energy landscape
 plt.colorbar()
 plt.xlabel('blanket state $b_1$', fontsize=12)
@@ -215,7 +215,7 @@ xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F) - mean_F[xlabel]),
          color='black')
 plt.xlabel('Time', fontsize=12)
-plt.ylabel('Free energy $F(b_t, \mathbf{\mu}_t)$', fontsize=12)
+plt.ylabel('Free energy $F(b, \mathbf{\mu})$', fontsize=12)
 plt.savefig("FE_vs_time_perturbed_6wayOU.png")
 
 
