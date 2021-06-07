@@ -1,14 +1,13 @@
 import jax.numpy as jnp
 
 
-
 def compute_FE_landscape(b_domain, mu_domain, b_eta, sync, precision):
     """
     Computes the free energy landscapeof a joint Gaussian log density up to an additive constant
     Arguments
     ========
-    `b_domain` [1D jax.DeviceArray]:
-    `mu_domain`  [1D jax.DeviceArray]:
+    `b_domain`  [1D jax.DeviceArray]:
+    `mu_domain` [1D jax.DeviceArray]:
     `prior`     [1D jax.DeviceArray]:
     `posterior` [1D jax.DeviceArray]:
     `precision` [2D jax.DeviceArray]: inverse of the stationary covariance of particular states
@@ -30,26 +29,3 @@ def compute_FE_landscape(b_domain, mu_domain, b_eta, sync, precision):
     return F.reshape(full_domain.shape[1:])
 
 
-
-
-
-
-
-
-
-
-    
-
-
-
-    # Z = np.outer(internal, blanket)
-    # for j in range(len(blanket)):
-    #     b = blanket[j]
-    #     bold_eta = eta * b  # expected external state
-    #     for k in range(len(internal)):
-    #         i = internal[k]
-    #         pred_eta = sync * i  # predicted external state
-    #         part_states = np.array([b, i])  # particular states
-    #         Z[k, j] = part_states @ S_part_inv @ part_states / 2  # potential term = surprise of part. states
-    #         Z[k, j] = Z[k, j] + Pi[di, di] * (pred_eta - bold_eta) ** 2 / 2  # KL term
-    # return Z
