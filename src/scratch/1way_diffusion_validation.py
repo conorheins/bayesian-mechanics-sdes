@@ -103,3 +103,24 @@ def one_step_int(dt, x_past, w_t):
 
     return x_past + dt * f(x_past) + g(x_past, w_t)
 
+
+# %%
+
+Pi = jnp.array([ [3., 1., 0.], 
+                        [1., 3., 0.5], 
+                        [0., 0.5, 2.5] ]) #selected precision matrix
+n_var, n_real = 3, 5
+
+x0_jax = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.linalg.inv(Pi), shape = (n_real,) ), (1, 0))
+
+def Q(y):
+    temp = jnp.tile(y, (y.shape[0], 1))
+    return temp - temp.T
+
+j_Q = jacfwd(Q)
+
+
+y = x0_jax[:,0]
+# divergence of solenoidal flow
+def divQ(y):
+    return jnp.trace(j_Q(y), axis1=0, axis2=2)

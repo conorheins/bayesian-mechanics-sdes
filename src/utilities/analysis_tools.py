@@ -1,5 +1,14 @@
 import jax.numpy as jnp
 
+import numpy as np
+from numpy.linalg import matrix_rank
+from scipy.linalg import null_space as ker
+
+def rank(A):  # compute matrix rank
+    if A.size == 0:
+        return 0
+    else:
+        return matrix_rank(A)
 
 def compute_FE_landscape(b_domain, mu_domain, b_eta, sync, precision):
     """
@@ -27,5 +36,15 @@ def compute_FE_landscape(b_domain, mu_domain, b_eta, sync, precision):
     F = potential_term + KL_term
 
     return F.reshape(full_domain.shape[1:])
+
+def compute_kernel_condition(Pi_mub, Pi_etab):
+    """
+    Check whether rank of the kernel of 
+    """
+
+    full_kernel = np.append(ker(Pi_mub), ker(Pi_etab), axis = 1)
+    eta_b_kernel = ker(Pi_etab)
+
+    return rank(full_kernel) > rank(eta_b_kernel)
 
 
