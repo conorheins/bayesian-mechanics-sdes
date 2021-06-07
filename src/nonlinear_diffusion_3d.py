@@ -11,64 +11,38 @@ import seaborn as sns
 from scipy.stats import pearsonr
 
 # import the 3way configuration variables 
-from configs.config_3way import Pi, S, b_mu, b_eta, sync, dimensions
-
-figures_folder = 'figures'
-if not os.path.isdir(figures_folder):
-    os.mkdir(figures_folder)
+from configs.config_3d import initialize_3d_nonlinear
 
 key = random.PRNGKey(1) # fix random seed for reproducibility
 
+pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
+plt.style.use('seaborn-white')
+
 figures_folder = 'figures'
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
 
-n_var = Pi.shape[0]
+'''
+Import the parameters of the state-dependent drift/diffusion process
+'''
+
+flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = 'default')
+# flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = random.PRNGKey(2)) # if you want to randomly initialize the precision matrix
+
+n_var = 3       # dimensionality
 
 eta_dim = dimensions['eta']
 b_dim = dimensions['b']
 mu_dim = dimensions['mu']
 pi_dim = dimensions['pi']
 
-# volatility
-def sigma(y):
-    return jnp.diag(y)
-
-# diffusion
-def D(y):
-    sigma_y = sigma(y)
-    return (sigma_y @ sigma_y.T) / 2.0
-
-j_D = jacfwd(D)
-
-def divD(y):
-    return jnp.trace(j_D(y), axis1=0, axis2=2)
-
-# # divergence of diffusion
-# def divD(y):
-#     return y
-
-# solenoidal flow
-def Q(y):
-    temp = jnp.tile(y, (y.shape[0], 1))
-    return temp - temp.T
-
-j_Q = jacfwd(Q)
-
-# divergence of solenoidal flow
-def divQ(y):
-    return jnp.trace(j_Q(y), axis1=0, axis2=2)
-
-# drift
-def drift(y):
-    # return -(D(y)) @ Pi @ y - divD(y)
-    return -(D(y) + Q(y)) @ Pi @ y + divD(y) + divQ(y)
+Pi, S = stationary_stats['Pi'], stationary_stats['S']
 
 # instantiate the diffusion process
-diff_process = NonlinearProcess(n_var, drift, sigma)
+diff_process = NonlinearProcess(n_var, flow_parameters['drift'], flow_parameters['sigma'])
 
 # simulation parameters
-dt, T, n_real = 10 ** (-3), 5 * 10 ** 2, 10 ** 5
+dt, T, n_real = 10 ** (-3), 5 * 10 ** 2, 10 ** 5 # integration window duration, number of total timesteps, number of parallel sample paths to simulate
 
 # Setting up the initial condition
 x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), jnp.linalg.inv(Pi), shape = (n_real,) ), (1, 0))
@@ -79,7 +53,6 @@ Run simulation
 '''
 
 x_t = diff_process.integrate(T, n_real, dt, x0, rng_key = key) # integrate the process
-
 
 # 2D histogram of stationary distribution
 plt.figure()
@@ -109,15 +82,6 @@ fig.set_size_inches(ratio * fig_length, fig_length, forward=True)
 plt.savefig(os.path.join(figures_folder,"longtime_distribution_3way.png"), dpi=100)
 plt.close()
 
-
-# 2D histogram to show not a Gaussian process
-# plt.figure()
-# plt.hist2d(x_t[t, 0, :], x_t[-1, 1, :], bins=(20, 20), cmap=cm.jet)
-# plt.suptitle('Non-Gaussian process')
-# plt.xlabel('$x_s$')
-# plt.ylabel('$x_t$')
-
-
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
 # Custom the inside plot: options are: “scatter” | “reg” | “resid” | “kde” | “hex”
@@ -139,6 +103,8 @@ plt.close()
 '''
 Figure: sync map diffusion process
 '''
+
+b_mu, b_eta, sync = sync_mappings['b_eta'], sync_mappings['b_mu'], sync_mappings['sync']
 
 # Compute an empirical histogram of the blanket states
 x_for_histogram = np.array(jnp.transpose(x_t, (1, 0, 2)).reshape(x_t.shape[1], x_t.shape[0]*x_t.shape[2]).T)
