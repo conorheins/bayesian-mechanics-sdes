@@ -87,6 +87,9 @@ class LinearProcess(DiffusionProcess):
         self.g = jit(vmap(D_func_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
     
     def one_step_int(self, dt, x_past, w_t):
+        """
+        Euler-Maruyama integration step for the OU process
+        """
 
         return x_past + dt * self.f(x_past) + self.g(w_t)
 
@@ -96,8 +99,8 @@ class NonlinearProcess(DiffusionProcess):
         """
         Arguments:
         `dim` [int]: dimensionality of the process (e.g. a vector valued process will have `dim > 1`)
-        `friction` [function]: flow function of the process
-        `volatility` [function]: diffusion/volatility function of the process 
+        `friction` [function]: state-dependent flow function of the process
+        `volatility` [function]: state-dependent volatility function of the process 
         """
 
         self.d = dim
@@ -126,7 +129,7 @@ class NonlinearProcess(DiffusionProcess):
     
     def one_step_int(self, dt, x_past, w_t):
         """
-        Integration for nonlinear diffusion, where the noise is state dependent
+        Euler-Maruyama integration step for state-dependent diffusion process, where the volatility term is state dependent
         """
 
         return x_past + dt * self.f(x_past) + self.g(x_past, w_t)
