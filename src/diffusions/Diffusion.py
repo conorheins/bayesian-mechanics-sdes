@@ -42,15 +42,13 @@ class DiffusionProcess(object):
         different parallel realizations
         """
         
-        em_scalar = jnp.sqrt(dt) # Euler-Maruyama scalar for noise variance during integration
-
         if rng_key is None:
             RNG_key = default_key
         else:
             RNG_key = rng_key
 
         # initialize random samples for the diffusion part of the process (the derivative of Brownian motion, dB/dt)
-        w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), em_scalar * jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
+        w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), dt * jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
 
         if N == 1:
             x0 = x0.reshape(self.d, 1)
@@ -132,11 +130,6 @@ class NonlinearProcess(DiffusionProcess):
 
         self.f = jit(vmap(lambda x: self.B(x), in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
 
-        # if self.d == 1:
-        #     self.f = jit(lambda x: self.B(x))
-        # else:
-        #     self.f = jit(vmap(lambda x: self.B(x), in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
-    
     def _set_D_func(self):
         """
         Sets the stochastic / non-deterministic part of the flow (diffusion), given the volatility of the process
@@ -144,12 +137,6 @@ class NonlinearProcess(DiffusionProcess):
 
         D_func_single = lambda x, w: jnp.dot(self.S(x), w)
         self.g = jit(vmap(D_func_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
-    
-        # if self.d == 1:
-        #     self.g = jit(lambda x, w: self.S(x) * w)
-        # else:
-        #     D_func_single = lambda x, w: jnp.dot(self.S(x), w)
-        #     self.g = jit(vmap(D_func_single, in_axes = 1, out_axes = 1)) # this assumes that the input array is of size (dim, num_parallel_samples)
     
     def one_step_int(self, dt, x_past, w_t):
         """
