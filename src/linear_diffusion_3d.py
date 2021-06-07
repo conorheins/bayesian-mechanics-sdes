@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import pearsonr
 
 # import the 3way configuration variables 
-from configs.config_3way import B, sigma, Pi, S, Q, b_mu, b_eta, sync, dimensions
+from configs.config_3d import initialize_3d_OU
 
 key = random.PRNGKey(0)
 
@@ -25,15 +25,20 @@ if not os.path.isdir(figures_folder):
 Setting up the steady-state
 '''
 
-n_var = Pi.shape[0]        # dimensionality
+flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_OU(rng_key = 'default')
+# flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_OU(rng_key = random.PRNGKey(1)) # if you want to randomly initialize the quantities of interest
+
+n_var = 3       # dimensionality
 
 eta_dim = dimensions['eta']
 b_dim = dimensions['b']
 mu_dim = dimensions['mu']
 pi_dim = dimensions['pi']
 
+Pi, S = stationary_stats['Pi'], stationary_stats['S']
+
 # Setting up the OU process
-process = LinearProcess(dim=n_var, friction=B, volatility=sigma)  # create process
+process = LinearProcess(dim=n_var, friction=flow_parameters['B'], volatility=flow_parameters['sigma'])  # create process
 
 '''
 OU process steady-state simulation
@@ -55,6 +60,8 @@ x = process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
 '''
 Figure 1: sync map OU process
 '''
+
+b_mu, b_eta, sync = sync_mappings['b_eta'], sync_mappings['b_mu'], sync_mappings['sync']
 
 # Compute an empirical histogram of the blanket states
 x_for_histogram = np.array(jnp.transpose(x, (1, 0, 2)).reshape(x.shape[1], x.shape[0]*x.shape[2]).T)
@@ -104,7 +111,7 @@ _, key = random.split(key)
 
 b = 10. # specify perturbed blanket state
 
-b_init = b * jnp.ones( n_real)
+b_init = b * jnp.ones(n_real)
 
 #initialising external and internal states at posterior distributions
 mu_init = random.multivariate_normal(key, jnp.array([b_mu*b]), inv(Pi[mu_dim,mu_dim][...,None]), shape = (n_real,) ).squeeze()
