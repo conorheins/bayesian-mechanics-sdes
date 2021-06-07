@@ -2,13 +2,15 @@ import os
 from diffusions import LinearProcess
 from utilities import initialize_random_friction_numpy, compute_FE_landscape, plot_hot_colourline
 import jax.numpy as jnp
-from jax.numpy.linalg import inv, det, eigvals
+from jax.numpy.linalg import inv
 from jax import random
 import numpy as np 
 import matplotlib.pyplot as plt
 
+from scipy.stats import pearsonr
+
 # import the 3way configuration variables 
-from configs.OU_3way import B, sigma, Pi, S, Q, b_mu, b_eta, sync, dimensions
+from configs.config_3way import B, sigma, Pi, S, Q, b_mu, b_eta, sync, dimensions
 
 key = random.PRNGKey(0)
 
@@ -23,7 +25,7 @@ if not os.path.isdir(figures_folder):
 Setting up the steady-state
 '''
 
-n_var = 3         # dimensionality
+n_var = Pi.shape[0]        # dimensionality
 
 eta_dim = dimensions['eta']
 b_dim = dimensions['b']
@@ -88,8 +90,8 @@ plt.scatter(bin_centers[bin_counts > 1000], sync_boldmu[bin_counts > 1000], s=1,
 plt.scatter(bin_centers[bin_counts > 1000], eta_cond_b[bin_counts > 1000], s=1, alpha=0.5, label='Actual: $\mathbf{\eta}(b_t)$')
 plt.xlabel('Blanket state space $\mathcal{B}$')
 plt.ylabel('External state space $\mathcal{E}$')
-# cor = scipy.stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
-# plt.title(f'Pearson correlation = {np.round(cor[0], 6)}...')
+cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
+plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
 plt.legend(loc='upper right')
 plt.savefig(os.path.join(figures_folder, "sync_map_3wayOUprocess.png"), dpi=100)
 plt.close()

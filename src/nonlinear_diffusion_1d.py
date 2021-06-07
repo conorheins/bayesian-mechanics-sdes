@@ -77,7 +77,7 @@ plt.ylabel('y axis')
 plt.figure()
 plt.hist2d(x_t[t, 0, :], x_t[-1, 0, :], bins=(50, 50), cmap=cm.jet)
 plt.suptitle('Joint probability at two different times')
-plt.xlabel('$x_{t-1}$')
+plt.xlabel('$x_s$')
 plt.ylabel('$x_t$')
 
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
