@@ -1,1 +1,1 @@
-from . import OU_3way
+from . import config_3way
