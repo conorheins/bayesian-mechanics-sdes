@@ -1,14 +1,18 @@
-from diffusions import LinearProcess, NonlinearProcess
+import os
+from diffusions import NonlinearProcess
 import jax.numpy as jnp
-from jax import random, vmap, grad, jacfwd, lax, jit
+from jax import random, jacfwd
 from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import seaborn as sns
 
 key = random.PRNGKey(0) # fix random seed for reproducibility
 
-n_var, dt, T, n_real = 1, 10 ** (-2), 5 * 10 ** 2, 10 ** 5  # global parameters for the process
+figures_folder = 'figures'
+if not os.path.isdir(figures_folder):
+    os.mkdir(figures_folder)
 
+n_var, dt, T, n_real = 1, 10 ** (-2), 5 * 10 ** 2, 10 ** 5 # duration of single time-step, total number of integration timesteps, number of parallel paths to simulate
 Pi = jnp.array([[1.0]])
 
 # state dependent volatility
@@ -86,9 +90,8 @@ plt.ylabel('$x_t$',labelpad=0)
 plt.xlim(-3, 3)
 plt.ylim(-3, 3)
 plt.tick_params(axis='both', which='major', pad=-3)
-plt.show()
 fig = plt.gcf()
 ratio = 1.3
 len = 5
 fig.set_size_inches(ratio * len, len, forward=True)
-plt.savefig("non-Gaussian_diffprocess.png", dpi=100)
+plt.savefig(os.path.join(figures_folder,"non-Gaussian_diffprocess.png"), dpi=100)
