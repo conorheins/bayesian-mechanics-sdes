@@ -11,20 +11,6 @@ class DiffusionProcess(object):
         self.f = flow_function
         self.g = D_function
         self.d = dim
-
-    # def integrate(self, x0, dt, T, N = 1): 
-        
-    #     em_scalar = jnp.sqrt(dt)
-
-    #     # initialize random samples for the diffusion part of the process (the derivative of Brownian motion, dB/dt)
-    #     w = jnp.transpose(random.multivariate_normal(RNG_key, jnp.zeros(self.d), em_scalar * jnp.eye(self.d), shape = (T, N) ), (0, 2, 1))
-
-    #     if N == 1:
-    #         x0 = x0.reshape(self.d, 1)
-
-    #     _, x_t = lax.scan(self.one_step_int, (x0, dt), w, length = T) 
-
-    #     return x_t
     
     def integrate(self, T, N, dt, *scan_args, rng_key = None): 
         """
