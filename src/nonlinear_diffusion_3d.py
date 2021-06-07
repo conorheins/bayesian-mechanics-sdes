@@ -142,7 +142,7 @@ plt.xlabel('Blanket state space $\mathcal{B}$')
 plt.ylabel('External state space $\mathcal{E}$')
 cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
 plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
-plt.legend(loc='lower right')
+plt.legend(loc='upper right')
 plt.savefig(os.path.join(figures_folder, "sync_map_3way_diffprocess.png"), dpi=100)
 plt.close()
 
