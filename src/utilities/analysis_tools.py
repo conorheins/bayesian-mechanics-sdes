@@ -1,4 +1,5 @@
 import jax.numpy as jnp
+from jax import vmap
 
 import numpy as np
 from numpy.linalg import matrix_rank
@@ -46,5 +47,47 @@ def compute_kernel_condition(Pi_mub, Pi_etab):
     eta_b_kernel = ker(Pi_etab)
 
     return rank(full_kernel) > rank(eta_b_kernel)
+
+def compute_Fboldmu_blanket_landscape(s_domain, a_domain, b_mu, part_precision):
+    """
+    Computes the free energy landscapeof a joint Gaussian log density up to an additive constant
+    Arguments
+    ========
+    `s_domain`  [1D vector - jax.DeviceArray]:
+    `a_domain` [1D vector - jax.DeviceArray]:
+    `b_mu`     [2 x 2 matrix - jax.DeviceArray]:
+    `part_precision` [4D jax.DeviceArray]: inverse of the stationary covariance of particular states
+    """
+
+    full_blankets = jnp.stack(jnp.meshgrid(s_domain, a_domain), axis =0)
+
+    full_blankets_reshaped = full_blankets.reshape(2, jnp.multiply(*full_blankets.shape[1:]))
+
+    bold_mu = b_mu @ full_blankets_reshaped
+
+    # following 2 lines assume that blanket precisions are stacked on top of internal state precisions
+    reshaped_domain = jnp.concatenate( (full_blankets_reshaped, bold_mu), axis = 0)
+    F = ((part_precision @ reshaped_domain) * reshaped_domain).sum(axis=0) / 2.0 
+
+    return F.reshape(full_blankets.shape[1:])
+
+def compute_Fboldmu_blanket_over_time(blanket_hist, b_mu, part_precision):
+    """
+    Computes particular free energy F(a, s, bold_mu) over time
+    """
+
+    bold_mu_over_time = lambda blankets: b_mu @ blankets
+    compute_F_over_time = lambda particular_bmu: ((part_precision @ particular_bmu) * particular_bmu).sum(axis=0) / 2.0 
+
+    bold_mu_over_time_vec = vmap(bold_mu_over_time, in_axes = 1, out_axes = 1)
+    F_over_time_vec = vmap(compute_F_over_time, in_axes = 1, out_axes = 1)
+
+    boldmu_hist = bold_mu_over_time_vec(blanket_hist) # compute bold_mu over time, vectorized across realizations
+
+    F_over_time = F_over_time_vec(jnp.concatenate((blanket_hist, boldmu_hist), axis = 0))
+
+    return F_over_time
+
+
 
 
