@@ -88,6 +88,11 @@ def compute_Fboldmu_blanket_over_time(blanket_hist, b_mu, part_precision):
 
     return F_over_time
 
+def eigsorted(cov):
+    vals, vecs = jnp.linalg.eigh(cov)
+    order = vals.argsort()[::-1]
+    return vals[order], vecs[:,order]
+
 
 
 
