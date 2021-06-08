@@ -26,6 +26,7 @@ def initialize_6d_OU(rng_key = None):
 
     dimensions = {'eta': eta_dim,
                     's': s_dim,
+                    'a': a_dim,
                     'b': b_dim,
                     'mu': mu_dim, 
                     'pi': pi_dim,
