@@ -7,8 +7,7 @@ import numpy as np
 from numpy.linalg import inv, det, pinv
 from numpy.linalg import eigvals as spec
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse, Patch
-import matplotlib.lines as mlines
+from matplotlib.patches import Patch
 from scipy.stats import multivariate_normal
 import matplotlib.cm as cm
 
@@ -19,6 +18,7 @@ from scipy.linalg import sqrtm
 
 
 np.random.seed(11)
+#11 is nice, 4 too (but little solenoidal flow)
 
 '''
 Functions
@@ -153,6 +153,9 @@ x0[de, :] = np.random.multivariate_normal(mean=eta @ b, cov=inv(Pi[de, de]), siz
 x = process.simulation(x0, epsilon, T, N)  # run simulation
 
 
+# choose which sample path to plot in the simulations (between 0 and N)
+n = 0
+
 '''
 Figure 2: Heat map of F(b, bold mu) and sample path
 '''
@@ -183,15 +186,14 @@ active = np.linspace(np.min(x[da, :, :]) - 1, np.max(x[da, :, :]) + 0.5, 100)  #
 
 Z = F_boldmu(sensory, active)  # free energy up to additive constant
 
-n = 0  # which sample path to show (between 0 and N)
 
 plt.figure(2)
 plt.clf()
-plt.title('Free energy $F(b, \mathbf{\mu})$', fontsize=13.5)
+plt.title('Free energy $F(b, \mathbf{\mu})$')
 plt.contourf(sensory, active, Z, levels=100, cmap='turbo')  # plotting the free energy landscape
 plt.colorbar()
-plt.xlabel('blanket state $b_1$', fontsize=12)
-plt.ylabel('blanket state $b_2$', fontsize=12)
+plt.xlabel('blanket state $b_1$')
+plt.ylabel('blanket state $b_2$')
 OU.plot_hot_colourline(x[ds, :, n].reshape(T), x[da, :, n].reshape(T), lw=0.5)
 plt.text(s='$b_t$', x=x[ds, 1, n] - 1, y=x[da, 1, n]+0.2, color='black')
 plt.savefig("Sample_perturbed_6wayOU.png")
@@ -200,22 +202,22 @@ plt.savefig("Sample_perturbed_6wayOU.png")
 Figure 3: average F(b, bold mu) over trajectories
 '''
 
-# compute average free energy over time
+# compute F(b, bold mu) over time averaged over all trajectories
 F_z = np.empty([T, N])
 for t in range(T):
-    for n in range(N):
-        F_z[t, n] = F_boldmu(x[ds, t, n], x[da, t, n])  # compute free energy
+    for s in range(N):
+        F_z[t, s] = F_boldmu(x[ds, t, s], x[da, t, s])  # compute free energy
 mean_F = np.mean(F_z, axis=1)  # take mean over trajectories
 
 plt.figure(3)
 plt.clf()
-plt.title('Average free energy over time', fontsize=13.5)
+plt.title('Average free energy over time')
 OU.plot_hot_colourline(np.arange(T), mean_F)
 xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F) - mean_F[xlabel]),
          color='black')
-plt.xlabel('Time', fontsize=12)
-plt.ylabel('Free energy $F(b, \mathbf{\mu})$', fontsize=12)
+plt.xlabel('Time')
+plt.ylabel('Free energy $F(b, \mathbf{\mu})$')
 plt.savefig("FE_vs_time_perturbed_6wayOU.png")
 
 
@@ -231,10 +233,11 @@ over time after the perturbation.
 ##
 T_fig= 200
 
-mean_trajectory = x.mean(axis=2)
-eta_samples = x[de,:T_fig,:]
+sample_trajectory = x[:,:T_fig,n] # choose sample trajectory
+eta_samples = sample_trajectory[de,:]
+b_samples = sample_trajectory[db,:]
 
-posterior_means = sync.dot(mean_trajectory[di,:T_fig])
+posterior_means = eta.dot(b_samples) # predicted external states = sigma(boldmu(b))
 posterior_cov = inv(Pi[de,de])
 
 conf_interval_param =1.96
@@ -245,36 +248,40 @@ pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_cov[1,1
 pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_cov[1,1]
 
 t_axis = np.arange(T_fig)
-plt.figure(figsize=(19,12))
+
+#create figure
+
+plt.figure(figsize=(8,6))
 plt.clf()
-plt.title('Prediction errors: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=30, pad = 10)
+plt.title('Predictive processing $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$')
 
 plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
-eta1_real_line = plt.plot(t_axis, eta_samples[0,:,::50], lw = 0.5, color = 'r', alpha=0.35, label='Sample paths: $(\eta_{t})_1$')
+eta1_real_line = plt.plot(t_axis, eta_samples[0,:], lw = 0.5, color = 'r', alpha=0.6, label='External: $(\eta_{t})_1$')
 mu1_mean_line = plt.plot(t_axis,posterior_means[0], color='b',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_1)$',lw=2.0)
 
-plot_offset = 3.0
+plot_offset = 4.0
 plt.fill_between(t_axis,pred_upper_CI_mu1 + plot_offset, pred_lower_CI_mu1 + plot_offset, color='#3de3ac', alpha=0.25)
-eta2_real_line = plt.plot(t_axis, eta_samples[1,:,::50] + plot_offset, lw = 0.5, color = '#933aab', alpha=0.35, label='Sample paths: $(\eta_{t})_2$')
+eta2_real_line = plt.plot(t_axis, eta_samples[1,:] + plot_offset, lw = 0.5, color = '#933aab', alpha=0.8, label='External: $(\eta_{t})_2$')
 mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_2)$',lw=2.0)
 
 ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
 ci_patch_2 = Patch(color='#3de3ac',alpha=0.25, label=' ')
 
-first_legend = plt.legend(handles=[ci_patch_1, ci_patch_2], loc=(0.007,0.015), fontsize=23.5, ncol = 1)
+first_legend = plt.legend(handles=[ci_patch_1, ci_patch_2], fontsize=12.9, loc=(0.001,0.0135), ncol = 1)
 # Add the legend manually to the current Axes.
 plt.gca().add_artist(first_legend)
-plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower left',fontsize=20, ncol = 2)
+plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower left', ncol = 2)
 
-min_value = min( ( pred_lower_CI_mu0.min(), eta_samples[0].min() ) )
-max_value = max( ( (pred_upper_CI_mu1 + plot_offset).max(), (eta_samples[1]+plot_offset).max() ) )
+min_value = min( pred_lower_CI_mu0.min(), eta_samples[0].min())
+max_value = max((pred_upper_CI_mu1 + plot_offset).max(), (eta_samples[1]+plot_offset).max() )
+total = max_value-min_value
 
 plt.xlim(t_axis[0], t_axis[-1])
-plt.ylim(1.25 * min_value, 1.1 * max_value )
+plt.ylim( min_value-0.2*total, max_value +0.1*total)
 
-plt.gca().tick_params(axis='both', which='both', labelsize=25)
-plt.gca().set_xlabel('Time',fontsize=30)
-plt.gca().set_ylabel('External state space $\mathcal{E}$',fontsize=30)
+plt.gca().tick_params(axis='both', which='both')
+plt.gca().set_xlabel('Time')
+plt.gca().set_ylabel('External state-space $\mathcal{E}$')
 plt.savefig("average_prediction_sensory_perturbation.png", dpi=100)
 
 
@@ -282,18 +289,18 @@ plt.savefig("average_prediction_sensory_perturbation.png", dpi=100)
 Figure 7 - plot the centered bivariate predictions for external states, overlaid with the analytic covariance / confidence intervals
 '''
 
-x = x.reshape(dim, T * N) # unwrap realizations (third dimension) to make one long matrix
+x_flat = x.reshape(dim, T * N) # unwrap realizations (third dimension) to make one long matrix
 
-mu_flat = x[di,:] # all realizations, for all timesteps, of internal states
-eta_flat = x[de,:] # all realizations, for all timesteps, of external states
+b_flat = x_flat[db,:] # all realizations, for all timesteps, of blanket states
+eta_flat = x_flat[de,:] # all realizations, for all timesteps, of external states
 
-q_mu = sync.dot(mu_flat) # predicted external states, parameterised by instantaneous internal states
+prediction = eta.dot(b_flat) # predicted external states = sigma(boldmu(b))
 
-fig, ax = plt.subplots(figsize=(14,10))
+fig, ax = plt.subplots(figsize=(8,6))
 
-plt.title('Prediction errors $\eta - \mathbf{\mu}$',fontsize=30, pad = 10)
+plt.title('Prediction errors $\eta - \sigma(\mathbf{\mu})$')
 
-prediction_errors = eta_flat - q_mu # prediction errors - difference between realization of external state and 'predicted' external state
+prediction_errors = eta_flat - prediction # prediction errors - difference between realization of external state and 'predicted' external state
 
 
 #axis limits
@@ -312,8 +319,8 @@ prediction_errors = prediction_errors.reshape([2,T,N])
 
 ind = np.arange(0,T) #indices to plot
 dots = ax.scatter(x=prediction_errors[0,ind,0],y=prediction_errors[1,ind, 0],s=3,label='Prediction errors', c=ind+10**(-3),cmap=cm.hot)
-for n in range(1,N,100):
-    ax.scatter(x=prediction_errors[0,ind,n], y=prediction_errors[1,ind,n], s=3,c=ind+10**(-3), cmap=cm.hot)
+for m in range(1,N,100):
+    ax.scatter(x=prediction_errors[0,ind,m], y=prediction_errors[1,ind,m], s=3,c=ind+10**(-3), cmap=cm.hot)
 
 
 #confidence ellipse
@@ -336,12 +343,12 @@ ci_patch = Patch(color='blue',alpha=0.2, label='Covariance at steady-state')
 
 #plotting of figure elements
 
-plt.legend(handles=[dots, ci_patch], loc='lower right',fontsize=20)
+plt.legend(handles=[dots, ci_patch], loc='lower right')
 legend = ax.get_legend()
 legend.legendHandles[0].set_color(cm.hot(0.01))
 
-plt.gca().tick_params(axis='both', which='both', labelsize=25)
-plt.gca().set_xlabel('$(\eta - \mathbf{\mu})_1$',fontsize=30)
-plt.gca().set_ylabel('$(\eta - \mathbf{\mu})_2$',fontsize=30)
+plt.gca().tick_params(axis='both', which='both')
+plt.gca().set_xlabel('$(\eta - \sigma(\mathbf{\mu}))_1$')
+plt.gca().set_ylabel('$(\eta - \sigma(\mathbf{\mu}))_2$')
 plt.savefig("prediction_error_cov_plot.png",dpi=100)
 
