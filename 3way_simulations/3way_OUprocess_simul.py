@@ -16,6 +16,8 @@ pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib t
 plt.style.use('seaborn-white')
 import scipy
 
+
+np.random.seed(1)
 '''
 Setting up the steady-state
 '''
@@ -203,7 +205,7 @@ def F(internal, blanket):  # computes free energy up to an additive constant
             pred_eta = sync * i  # predicted external state
             part_states = np.array([b, i])  # particular states
             Z[k, j] = part_states @ S_part_inv @ part_states / 2  # potential term = surprise of part. states
-            Z[k, j] = Z[k, j] + Pi[di, di] * (pred_eta - bold_eta) ** 2 / 2  # KL term
+            Z[k, j] = Z[k, j] + Pi[de, de] * (pred_eta - bold_eta) ** 2 / 2  # KL term
     return Z
 
 
@@ -224,7 +226,7 @@ plt.xlabel('blanket state $b$')
 plt.plot(blanket, float(mu) * blanket, c='white')  # plot expected internal state as a function of blanket states
 OU.plot_hot_colourline(x[db, :, n].reshape([T]), x[di, :, n].reshape([T]), lw=0.5)
 plt.text(s='$\mathbf{\mu}(b)$', x=np.min(x[db, :, :]) - 0.7, y=mu * (np.min(x[db, :, :]) - 0.7) + 0.2, color='white')
-plt.text(s='$(b_t, \mu_t)$', x=x[db, 0, n] - 2, y=x[di, 0, n], color='black')
+plt.text(s='$(b_t, \mu_t)$', x=x[db, 1, n] - 1.2, y=x[di, 1, n]+0.3, color='black')
 plt.savefig("Sample_perturbed_3wayOU.png", dpi=100)
 
 '''
@@ -253,7 +255,7 @@ plt.savefig("FE_vs_time_perturbed_3wayOU.png", dpi=100)
 Figure 4: predictive processing
 '''
 
-T_fig= 300
+T_fig= T
 
 sample_trajectory = x[:,:T_fig,n] # choose sample trajectory
 eta_samples = sample_trajectory[de,:]
