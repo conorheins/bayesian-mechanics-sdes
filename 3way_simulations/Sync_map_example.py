@@ -88,9 +88,9 @@ plt.clf()
 plt.scatter(bins[j == 1], sync_bold_mu[j == 1], s=1, alpha=0.5,
             label='Prediction: $\sigma(\mathbf{\mu}(b))$')  # scatter plot theoretical expected internal state
 plt.scatter(bins[j == 1], bold_eta_empirical[j == 1], s=1, alpha=0.5,
-            label='Actual: $\mathbf{\eta}(b)$')  # scatter plot empirical external internal state
-plt.xlabel('Blanket state space $\mathcal{B}$')
-plt.ylabel('External state space $\mathcal{E}$')
+            label='External: $\mathbf{\eta}(b)$')  # scatter plot empirical external internal state
+plt.xlabel('Blanket state-space $\mathcal{B}$')
+plt.ylabel('External state-space $\mathcal{E}$')
 plt.legend(loc='upper right')
 cor = stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
 plt.title(f'Pearson correlation = {np.round(cor[0],6)}...')

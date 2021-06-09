@@ -7,11 +7,17 @@ import numpy as np
 from numpy.linalg import inv, det
 from numpy.linalg import eigvals as spec
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+from scipy.stats import multivariate_normal
+import matplotlib.cm as cm
+import seaborn as sns
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
 import scipy
 
+
+np.random.seed(1)
 '''
 Setting up the steady-state
 '''
@@ -154,10 +160,10 @@ plt.suptitle('Synchronisation map')
 plt.scatter(bins[j == 1], sync_bold_mu[j == 1], s=1, alpha=0.5,
             label='Prediction: $\sigma(\mathbf{\mu}(b_t))$')  # scatter plot theoretical expected internal state
 plt.scatter(bins[j == 1], bold_eta_empirical[j == 1], s=1, alpha=0.5,
-            label='Actual: $\mathbf{\eta}(b_t)$')  # scatter plot empirical external internal state
+            label='External: $\mathbf{\eta}(b_t)$')  # scatter plot empirical external internal state
 # plt.scatter(bins[j == 1], bold_eta_theoretical[j == 1], s=1, alpha=0.5,label='Theo: $\mathbf{\eta}(b)$')
-plt.xlabel('Blanket state space $\mathcal{B}$')
-plt.ylabel('External state space $\mathcal{E}$')
+plt.xlabel('Blanket state-space $\mathcal{B}$')
+plt.ylabel('External state-space $\mathcal{E}$')
 plt.legend(loc='upper right')
 cor = scipy.stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
 plt.title(f'Pearson correlation = {np.round(cor[0], 6)}...')
@@ -199,7 +205,7 @@ def F(internal, blanket):  # computes free energy up to an additive constant
             pred_eta = sync * i  # predicted external state
             part_states = np.array([b, i])  # particular states
             Z[k, j] = part_states @ S_part_inv @ part_states / 2  # potential term = surprise of part. states
-            Z[k, j] = Z[k, j] + Pi[di, di] * (pred_eta - bold_eta) ** 2 / 2  # KL term
+            Z[k, j] = Z[k, j] + Pi[de, de] * (pred_eta - bold_eta) ** 2 / 2  # KL term
     return Z
 
 
@@ -220,7 +226,7 @@ plt.xlabel('blanket state $b$')
 plt.plot(blanket, float(mu) * blanket, c='white')  # plot expected internal state as a function of blanket states
 OU.plot_hot_colourline(x[db, :, n].reshape([T]), x[di, :, n].reshape([T]), lw=0.5)
 plt.text(s='$\mathbf{\mu}(b)$', x=np.min(x[db, :, :]) - 0.7, y=mu * (np.min(x[db, :, :]) - 0.7) + 0.2, color='white')
-plt.text(s='$(b_t, \mu_t)$', x=x[db, 0, n] - 2, y=x[di, 0, n], color='black')
+plt.text(s='$(b_t, \mu_t)$', x=x[db, 1, n] - 1.2, y=x[di, 1, n]+0.3, color='black')
 plt.savefig("Sample_perturbed_3wayOU.png", dpi=100)
 
 '''
@@ -230,8 +236,8 @@ Figure 3: average free energy over trajectories
 # compute average free energy over time
 F_z = np.empty([T, N])
 for t in range(T):
-    for n in range(N):
-        F_z[t, n] = F(x[di, t, n], x[db, t, n])  # compute free energy
+    for m in range(N):
+        F_z[t, m] = F(x[di, t, m], x[db, t, m])  # compute free energy
 mean_F = np.mean(F_z, axis=1)  # take mean over trajectories
 
 plt.figure(3)
@@ -243,3 +249,102 @@ plt.text(s='$F(b_t, \mu_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F
 plt.xlabel('Time')
 plt.ylabel('Free energy $F(b_t, \mu_t)$')
 plt.savefig("FE_vs_time_perturbed_3wayOU.png", dpi=100)
+
+
+'''
+Figure 4: predictive processing
+'''
+
+T_fig= T
+
+sample_trajectory = x[:,:T_fig,n] # choose sample trajectory
+eta_samples = sample_trajectory[de,:]
+mu_samples = sample_trajectory[di,:]
+
+posterior_means = sync.dot(mu_samples) # predicted external states = sigma(mu)
+posterior_cov = inv(Pi[de,de])
+
+conf_interval_param =1.96
+pred_upper_CI_mu0 = posterior_means+ conf_interval_param * posterior_cov
+pred_lower_CI_mu0 = posterior_means- conf_interval_param * posterior_cov
+
+t_axis = np.arange(T_fig)
+plt.figure(figsize=(8,6))
+plt.clf()
+plt.title('Predictive processing $q_{\mu_t}(\eta)$ vs $\eta_t$')
+
+plt.fill_between(t_axis,pred_upper_CI_mu0[0,:], pred_lower_CI_mu0[0,:], color='b', alpha=0.15)
+eta1_real_line = plt.plot(t_axis, eta_samples[0,:], lw = 0.5, color = 'r', alpha=0.6, label='External: $\eta_{t}$')
+mu1_mean_line = plt.plot(t_axis,posterior_means[0,:], color='b',label='Prediction: $q_{\mu_t}(\eta)$',lw=2.0)
+
+ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
+
+first_legend = plt.legend(handles=[ci_patch_1], fontsize=12.9, loc=(0.001,0.0135), ncol = 1)
+# Add the legend manually to the current Axes.
+plt.gca().add_artist(first_legend)
+plt.legend(handles=[mu1_mean_line[0], eta1_real_line[0]], loc='lower left', ncol = 2)
+
+min_value = min( pred_lower_CI_mu0.min(), eta_samples[0,:].min() )
+max_value = max( pred_upper_CI_mu0.max(), eta_samples[0,:].max() )
+
+plt.xlim(t_axis[0], t_axis[-1])
+plt.ylim(1.25 * min_value, 1.25 * max_value)
+
+plt.gca().tick_params(axis='both', which='both')
+plt.gca().set_xlabel('Time')
+plt.gca().set_ylabel('External state-space $\mathcal{E}$')
+plt.savefig("average_prediction_3way_OUprocess.png", dpi=100)
+
+
+
+'''
+Figure 5 - plot the prediction errors evolving over time
+'''
+
+x_flat = x.reshape(dim, T *N) # unwrap realizations (third dimension) to make one long matrix
+
+mu_flat = x_flat[di,:] # all realizations, for all timesteps, of blanket states
+eta_flat = x_flat[de,:] # all realizations, for all timesteps, of external states
+
+prediction = sync.dot(mu_flat) # predicted external states = sigma(mu)
+
+
+prediction_errors = eta_flat - prediction # prediction errors - difference between realization of external state and 'predicted' external state
+
+prediction_errors = prediction_errors.reshape(T,N)
+
+
+#start figure
+plt.figure()
+plt.clf()
+plt.title('Prediction errors $\eta_t - \sigma(\mu_t)$')
+#OU.plot_hot_colourline(np.arange(T), mean_F)
+
+
+#set up heatmap of prediction error paths
+
+min_y = prediction_errors.min()
+max_y = prediction_errors.max()
+no_bins = 50 #number of bins for frequency dataset
+bins_pred_error = np.linspace(min_y,max_y, no_bins) #partition prediction error space
+bin_interval = bins_pred_error[1]-bins_pred_error[0]
+freq_pred_error = np.empty([T,no_bins])
+
+for t in range(T):
+    for i in range(no_bins):
+        temp = bins_pred_error[i]
+        freq_pred_error[t,i] = np.sum((prediction_errors[t,:] >= temp- bin_interval/2) * (prediction_errors[t,:] < temp + bin_interval/2))
+
+time = range(T)
+#plot heat map of prediction error paths
+
+plt.contourf(time, bins_pred_error, freq_pred_error.T, levels=100, cmap='Blues')
+
+#plot sample prediction error path
+handle = plt.plot(range(T), prediction_errors[:,n], color = 'darkorange',linewidth=0.8,label='Sample path')
+
+#set axis labels and save
+plt.xlabel('Time')
+plt.ylabel('$\eta_t - \sigma(\mu_t)$')
+plt.legend(loc='lower right')
+plt.savefig("Prediction_errors_time_3wayOU.png", dpi=100)
