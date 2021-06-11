@@ -204,7 +204,7 @@ def initialize_3d_nonlinear(rng_key='default'):
 
     # solenoidal flow
     def Q(y):
-        temp = jnp.tile(y, (y.shape[0], 1))
+        temp = jnp.tile(y, (y.shape[0], 1))  # or we do this, and use the trace over axes 1 and 2, and add the divergence
         return temp - temp.T
 
     j_Q = jacfwd(Q)
@@ -215,8 +215,23 @@ def initialize_3d_nonlinear(rng_key='default'):
 
     # drift
     def drift(y):
-        # return -(D(y)) @ Pi @ y - divD(y)
         return -(D(y) + Q(y)) @ Pi @ y + divD(y) + divQ(y)
+
+    # alternative way of writing down the divergence of the solenoidal flow, consistent with how Karl does it in the stochastic chaos / Markov blankets paper
+    #  # solenoidal flow
+    # def Q_alt(y):
+    #     temp = jnp.tile(-y, (y.shape[0], 1)) # we can do this and keep the divergence additive, and keep the trace operating over axes 0 and 2
+    #     return temp - temp.T
+
+    # j_Q_alt = jacfwd(Q_alt)
+
+    # # divergence of solenoidal flow
+    # def divQ_alt(y):
+    #     return jnp.trace(j_Q_alt(y), axis1=1, axis2=2)
+
+    # # drift
+    # def drift_alt(y):
+    #     return -(D(y) + Q(y)) @ Pi @ y + divD(y) - divQ_alt(y) # the way Karl does it -- if you do this, you can have Q be defined using negative y, but also do the trace of the Jacobian over axes 1 and 2, then you subtract (the so-called 'house-keeping' term)
 
     flow_parameters = {'drift': drift, 'sigma': sigma, 'D': D, 'Q': Q, 'divD': divD, 'divQ': divQ}
 
