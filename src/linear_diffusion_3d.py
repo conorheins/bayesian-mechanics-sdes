@@ -1,25 +1,31 @@
 import os
 from diffusions import LinearProcess
-from utilities import initialize_random_friction_numpy, compute_FE_landscape, plot_hot_colourline
+from utilities import initialize_random_friction_numpy, compute_FE_landscape, compute_F_over_time
+from utilities import plot_hot_colourline, compute_FE_landscape, compute_F_over_time, plot_b_mu_evolving_density
+
 import jax.numpy as jnp
 from jax.numpy.linalg import inv
+from jax import vmap
+from scipy.linalg import sqrtm
 from jax import random
 import numpy as np 
 import matplotlib.pyplot as plt
-
-from scipy.stats import pearsonr
+from matplotlib.patches import Patch
 
 # import the 3way configuration variables 
 from configs.config_3d import initialize_3d_OU
 
 key = random.PRNGKey(0)
 
+save_mode = False
+
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
 
-figures_folder = 'figures'
-if not os.path.isdir(figures_folder):
-    os.mkdir(figures_folder)
+if save_mode:
+    figures_folder = 'figures'
+    if not os.path.isdir(figures_folder):
+        os.mkdir(figures_folder)
 
 '''
 Setting up the steady-state
@@ -61,7 +67,7 @@ x = process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
 Figure 1: sync map OU process
 '''
 
-b_mu, b_eta, sync = sync_mappings['b_eta'], sync_mappings['b_mu'], sync_mappings['sync']
+b_eta, b_mu, sync = sync_mappings['b_eta'], sync_mappings['b_mu'], sync_mappings['sync']
 
 # Compute an empirical histogram of the blanket states
 x_for_histogram = np.array(jnp.transpose(x, (1, 0, 2)).reshape(x.shape[1], x.shape[0]*x.shape[2]).T)
@@ -94,18 +100,21 @@ sync_boldmu = sync * mu_cond_b
 plt.figure(1)
 plt.suptitle('Synchronisation map')
 plt.scatter(bin_centers[bin_counts > 1000], sync_boldmu[bin_counts > 1000], s=1, alpha=0.5, label='Prediction: $\sigma(\mathbf{\mu}(b_t))$')  # scatter plot theoretical expected internal state
-plt.scatter(bin_centers[bin_counts > 1000], eta_cond_b[bin_counts > 1000], s=1, alpha=0.5, label='Actual: $\mathbf{\eta}(b_t)$')
-plt.xlabel('Blanket state space $\mathcal{B}$')
-plt.ylabel('External state space $\mathcal{E}$')
-cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
-plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
+plt.scatter(bin_centers[bin_counts > 1000], eta_cond_b[bin_counts > 1000], s=1, alpha=0.5, label='External: $\mathbf{\eta}(b_t)$')
+plt.xlabel('Blanket state-space $\mathcal{B}$')
+plt.ylabel('External state-space $\mathcal{E}$')
+# cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
+# plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
 plt.legend(loc='upper right')
-plt.savefig(os.path.join(figures_folder, "sync_map_3wayOUprocess.png"), dpi=100)
-plt.close()
+if save_mode:
+    plt.savefig(os.path.join(figures_folder, "sync_map_3wayOUprocess.png"), dpi=100)
+    plt.close()
 
 '''
 OU process perturbed simulation
 '''
+
+T = 1000 # do a long enough trajectory for the predictive processing figure later
 
 _, key = random.split(key)
 
@@ -128,6 +137,8 @@ x = process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
 Figure 2: Heat map of F(mu,b) and sample path
 '''
 
+T_end_fe = 500
+
 S_part_inv = inv(S[np.ix_(pi_dim, pi_dim)]) # stationary covariance of particular states
 
 internal = jnp.linspace(jnp.min(x[:, mu_dim, :]) - 1, jnp.max(x[:, mu_dim, :]) + 0.5, 105)  # internal state-space points
@@ -135,7 +146,7 @@ blanket = jnp.linspace(jnp.min(x[:, b_dim, :]) - 1, jnp.max(x[:, b_dim, :]) + 0.
 
 F_landscape = compute_FE_landscape(blanket, internal, b_eta, sync, S_part_inv, Pi[eta_dim, eta_dim])
 
-realisation_idx = 3  # which sample path to show (between 0 and N)
+realisation_idx = 3  # which sample path to show (between 0 and n_real)
 
 plt.figure(2)
 plt.title('Free energy $F(b, \mu)$')
@@ -145,16 +156,179 @@ plt.ylabel('internal state $ \mu$')
 plt.xlabel('blanket state $b$')
 plt.plot(blanket, b_mu * blanket, c='white')  # plot expected internal state as a function of blanket states
 
-blanket_trajectory = x[:, b_dim, realisation_idx].squeeze()
-mu_trajectory = x[:, mu_dim, realisation_idx].squeeze()
+blanket_trajectory = x[:T_end_fe, b_dim, realisation_idx].squeeze()
+mu_trajectory = x[:T_end_fe, mu_dim, realisation_idx].squeeze()
 
 plot_hot_colourline(blanket_trajectory, mu_trajectory, lw=0.5)
-plt.text(s='$\mathbf{\mu}(b)$', x= x[:, b_dim, :].min()  - 0.7, y= b_mu * (x[:, b_dim, :].min() - 0.7) + 0.2, color='white')
+plt.text(s='$\mathbf{\mu}(b)$', x= x[:T_end_fe, b_dim, :].min()  - 0.7, y= b_mu * (x[:T_end_fe, b_dim, :].min() - 0.7) + 0.2, color='white')
+plt.text(s='$(b_t, \mu_t)$', x=x[1, b_dim, realisation_idx] - 1.2, y=x[1, mu_dim, realisation_idx] + 0.3, color='black')
+if save_mode:
+    plt.savefig(os.path.join(figures_folder,"Sample_perturbed_3wayOU.png"), dpi=100)
+    plt.close()
 
-plt.text(s='$(b_t, \mu_t)$', x=blanket_trajectory[0] - 2, y=mu_trajectory[0], color='black')
-plt.savefig(os.path.join(figures_folder,"Sample_perturbed_3wayOU.png"), dpi=100)
-plt.close()
 
+'''
+Figure 3: average free energy over trajectories
+'''
+
+
+particular_states_hist = jnp.transpose(x[:T_end_fe,b_dim + mu_dim,:], (1, 0, 2)) # get full particular states (blanket & internal)
+F_over_time = compute_F_over_time(particular_states_hist, b_eta, sync, S_part_inv, Pi[eta_dim, eta_dim])
+
+mean_F = F_over_time.mean(axis=0)
+
+plt.figure(3)
+plt.clf()
+plt.title('Average free energy over time')
+plot_hot_colourline(np.arange(T_end_fe), mean_F)
+xlabel_pos = int(T_end_fe * 0.4)  # position of text on x axis
+plt.text(s='$F(b_t, \mu_t)$', x=xlabel_pos, y=mean_F[xlabel_pos] + 0.05 * (np.max(mean_F) - mean_F[xlabel_pos]), color='black')
+plt.xlabel('Time')
+plt.ylabel('Free energy $F(b_t, \mu_t)$')
+if save_mode:
+    plt.savefig(os.path.join(figures_folder,"FE_vs_time_perturbed_3wayOU.png"), dpi=100)
+    plt.close()
+
+'''
+Figure 4: predictive processing
+'''
+T_end_PP = 800
+
+realisation_idx = 3  # which sample path to show (between 0 and n_real)
+
+sample_trajectory = x[:T_end_PP,:,realisation_idx] # choose sample trajectory
+# sample_trajectory = x[:T_end_PP,:,:].mean(axis=2) # average trajectories
+
+eta_samples = sample_trajectory[:,eta_dim].squeeze()
+mu_samples = sample_trajectory[:,mu_dim].squeeze()
+
+posterior_means = sync @ mu_samples.reshape(1,-1) # predicted external states, given instantaneous internal states -- sigma(mu)
+posterior_cov = inv(Pi[eta_dim,eta_dim][...,None])
+posterior_stds = sqrtm(posterior_cov)
+
+conf_interval_param = 1.96 # 95% of probability mass should lie within approximately 1.96 +/- standard deviations of the mean
+pred_upper_CI_mu0 = posterior_means + conf_interval_param * posterior_cov
+pred_lower_CI_mu0 = posterior_means - conf_interval_param * posterior_cov
+
+t_axis = np.arange(T_end_PP)
+plt.figure(figsize=(8,6))
+plt.clf()
+plt.title('Predictive processing: $q_{\mu_t}(\eta)$ vs $\eta_t$',fontsize = 20)
+
+plt.fill_between(t_axis,pred_upper_CI_mu0[0,:], pred_lower_CI_mu0[0,:], color='#4ba2d1', alpha=0.25)
+eta1_real_line = plt.plot(t_axis, eta_samples, lw = 1.25, color = '#d12f13', alpha=1.0, label='External: $\eta_{t}$')
+mu1_mean_line = plt.plot(t_axis,posterior_means, color='#27739c',label='Prediction: $q_{\mu_t}(\eta)$',lw=2.0)
+
+ci_patch_1 = Patch(color='#4ba2d1',alpha=0.2, label=' ')
+
+first_legend = plt.legend(handles=[ci_patch_1], fontsize=18, loc=(0.27,0.135), ncol = 1)
+# Add the legend manually to the current Axes.
+plt.gca().add_artist(first_legend)
+plt.legend(handles=[mu1_mean_line[0], eta1_real_line[0]], loc='lower center', ncol = 1,  fontsize=18)
+
+min_value = min( pred_lower_CI_mu0.min(), eta_samples.min() )
+max_value = max( pred_upper_CI_mu0.max(), eta_samples.max() )
+
+plt.xlim(t_axis[0], t_axis[-1])
+plt.ylim(1.25 * min_value, 1.25 * max_value)
+
+plt.gca().tick_params(axis='both', which='both')
+plt.gca().set_xlabel('Time', fontsize=18)
+plt.gca().set_ylabel('External state-space $\mathcal{E}$', fontsize=18)
+
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
+
+if save_mode:
+    plt.savefig("average_prediction_3way_OUprocess.png", dpi=100)
+    plt.close()
+
+
+'''
+Figure 5 - plot the prediction errors evolving over time
+'''
+
+vmapped_sigma = vmap(lambda mu_t: sync @ mu_t, in_axes = 1, out_axes = 1)
+predictions = vmapped_sigma(jnp.transpose(x[:,mu_dim,:], (1,0,2)))
+eta_samples = jnp.transpose(x[:,eta_dim,:], (1,0,2)).squeeze()
+p_pe_t_by_n = Pi[eta_dim, eta_dim] * (eta_samples - predictions) # precision weighted prediction errors (T x n_real)
+
+# x_flat = jnp.transpose(x, (1, 0, 2)).reshape(n_var, T * n_real) # unwrap realizations (third dimension) to make one long matrix
+
+# mu_flat = x_flat[mu_dim,:] # all realizations, for all timesteps, of blanket states
+# eta_flat = x_flat[eta_dim,:] # all realizations, for all timesteps, of external states
+
+# predictions = sync @ mu_flat # predicted external states = sigma(mu)
+
+# p_pe = Pi[eta_dim, eta_dim] * (eta_flat - predictions) # precision-weighted prediction errors - difference between realization of external state and 'predicted' external state
+
+# p_pe_t_by_n = p_pe.reshape(T,n_real)
+
+
+# #start figure
+# plt.figure()
+# plt.clf()
+# plt.title('Prediction errors $\eta_t - \sigma(\mu_t)$')
+
+# #set up heatmap of prediction error paths
+
+# min_y = prediction_errors.min()
+# max_y = prediction_errors.max()
+# no_bins = 50 #number of bins for frequency dataset
+# bins_pred_error = np.linspace(min_y,max_y, no_bins) #partition prediction error space
+# bin_interval = bins_pred_error[1]-bins_pred_error[0]
+# freq_pred_error = np.empty([T,no_bins])
+
+# for t in range(T):
+#     for i in range(no_bins):
+#         temp = bins_pred_error[i]
+#         freq_pred_error[t,i] = np.sum((prediction_errors[t,:] >= temp- bin_interval/2) * (prediction_errors[t,:] < temp + bin_interval/2))
+
+# t_axis = range(T)
+# #plot heat map of prediction error paths
+
+# plt.contourf(time, bins_pred_error, freq_pred_error.T, levels=100, cmap='Blues')
+
+# #plot sample prediction error path
+# handle = plt.plot(range(T), prediction_errors[:,n], color = 'darkorange',linewidth=0.8,label='Sample path')
+
+# #set axis labels and save
+# plt.xlabel('Time')
+# plt.ylabel('$\eta_t - \sigma(\mu_t)$')
+# plt.legend(loc='lower right')
+# plt.savefig("Prediction_errors_time_3wayOU.png", dpi=100)
+
+'''
+Figure 6: Plot evolving heatmap of probability density of blanket and internal states over time
+'''
+
+# Run perturbation experiments with way more realizations but fewer time
+T, n_real = 150, 2 * 10**4
+
+_, key = random.split(key)
+
+b = 10. # specify perturbed blanket state 
+
+b_init = b * jnp.ones(n_real)
+
+#initialising external and internal states at posterior distributions
+mu_init = random.multivariate_normal(key, jnp.array([b_mu*b]), inv(Pi[mu_dim,mu_dim][...,None]), shape = (n_real,) ).squeeze()
+_, key = random.split(key)
+eta_init = random.multivariate_normal(key, jnp.array([b_eta*b]), inv(Pi[eta_dim,eta_dim][...,None]), shape = (n_real,) ).squeeze()
+_, key = random.split(key)
+
+x0 = jnp.stack( (eta_init, b_init, mu_init), axis = 0)
+
+# sample paths
+x = process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
+
+plt.figure(3)
+density_over_time, b_bin_centers, mu_bin_centers = plot_b_mu_evolving_density(x, b_dim, mu_dim, 
+                                    start_T = 0, end_T = T, forward_window = 5,
+                                    plot_average = True, plot_paths = True)
+if save_mode:
+    plt.savefig(os.path.join(figures_folder,"path_density_3wayOU.png"), dpi=100)
+    plt.close()
 
 
 
