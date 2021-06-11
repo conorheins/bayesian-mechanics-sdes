@@ -133,7 +133,7 @@ S_part_inv = inv(S[np.ix_(pi_dim, pi_dim)]) # stationary covariance of particula
 internal = jnp.linspace(jnp.min(x[:, mu_dim, :]) - 1, jnp.max(x[:, mu_dim, :]) + 0.5, 105)  # internal state-space points
 blanket = jnp.linspace(jnp.min(x[:, b_dim, :]) - 1, jnp.max(x[:, b_dim, :]) + 0.5, 100)  # internal state-space points
 
-F_landscape = compute_FE_landscape(blanket, internal, b_eta, sync, S_part_inv)
+F_landscape = compute_FE_landscape(blanket, internal, b_eta, sync, S_part_inv, Pi[eta_dim, eta_dim])
 
 realisation_idx = 3  # which sample path to show (between 0 and N)
 
