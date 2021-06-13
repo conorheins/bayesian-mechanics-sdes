@@ -64,7 +64,8 @@ def compute_F_over_time(part_states_hist, b_eta, sync, precision, q_precision):
 
 def compute_kernel_condition(Pi_mub, Pi_etab):
     """
-    Check whether rank of the kernel of 
+    Check whether rank of the kernel of \Pi_{\mu b} is within the kernel of \Pi_{\eta b}, according to condition (iv) of Lemma 2.1
+    in the paper. 
     """
 
     full_kernel = np.append(ker(Pi_mub), ker(Pi_etab), axis = 1)
@@ -74,13 +75,13 @@ def compute_kernel_condition(Pi_mub, Pi_etab):
 
 def compute_Fboldmu_blanket_landscape(s_domain, a_domain, b_mu, part_precision):
     """
-    Computes the free energy landscapeof a joint Gaussian log density up to an additive constant
+    Computes the free energy landscape of a joint Gaussian log density up to an additive constant. Free energy only consist of the log potential term in this case
     Arguments
     ========
-    `s_domain`  [1D vector - jax.DeviceArray]:
-    `a_domain` [1D vector - jax.DeviceArray]:
-    `b_mu`     [2 x 2 matrix - jax.DeviceArray]:
-    `part_precision` [4D jax.DeviceArray]: inverse of the stationary covariance of particular states
+    `s_domain`  [1D vector - jax.DeviceArray]: domain of the sensory states at whose levels free energy is to be computed
+    `a_domain` [1D vector - jax.DeviceArray]: domain of the activate states, at whose levels free energy is to be computed
+    `b_mu`     [2 x 2 matrix - jax.DeviceArray]: # mapping from blanket states to most likely internal states
+    `part_precision` [4D jax.DeviceArray]: inverse of the stationary covariance of particular states - "particular precision"
     """
 
     full_blankets = jnp.stack(jnp.meshgrid(s_domain, a_domain), axis =0)
@@ -97,7 +98,10 @@ def compute_Fboldmu_blanket_landscape(s_domain, a_domain, b_mu, part_precision):
 
 def compute_Fboldmu_blanket_over_time(blanket_hist, b_mu, part_precision):
     """
-    Computes particular free energy F(a, s, bold_mu) over time. Free energy only consist of the log potential term in this case
+    Computes particular free energy F(a, s, bold_mu) over time, up to an additive constant. Free energy only consist of the log potential term in this case
+    `blanket_hist` [2 x T matrix - jax.DeviceArray]: history of the blanket states, for which free energy will be computed
+    `b_mu`     [2 x 2 matrix - jax.DeviceArray]: # mapping from blanket states to most likely internal states
+    `part_precision` [4D jax.DeviceArray]: inverse of the stationary covariance of particular states - "particular precision"
     """
 
     bold_mu_over_time = lambda blankets: b_mu @ blankets
