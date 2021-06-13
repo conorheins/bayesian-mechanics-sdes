@@ -17,7 +17,7 @@ from configs.config_3d import initialize_3d_OU
 
 key = random.PRNGKey(0)
 
-save_mode = False
+save_mode = True
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
@@ -146,7 +146,8 @@ blanket = jnp.linspace(jnp.min(x[:, b_dim, :]) - 1, jnp.max(x[:, b_dim, :]) + 0.
 
 F_landscape = compute_FE_landscape(blanket, internal, b_eta, sync, S_part_inv, Pi[eta_dim, eta_dim])
 
-realisation_idx = 3  # which sample path to show (between 0 and n_real)
+realisation_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
+print(f'Sample path index being shown: {realisation_idx}')
 
 plt.figure(2)
 plt.title('Free energy $F(b, \mu)$')
@@ -194,10 +195,7 @@ Figure 4: predictive processing
 '''
 T_end_PP = 800
 
-realisation_idx = 3  # which sample path to show (between 0 and n_real)
-
 sample_trajectory = x[:T_end_PP,:,realisation_idx] # choose sample trajectory
-# sample_trajectory = x[:T_end_PP,:,:].mean(axis=2) # average trajectories
 
 eta_samples = sample_trajectory[:,eta_dim].squeeze()
 mu_samples = sample_trajectory[:,mu_dim].squeeze()
@@ -240,7 +238,7 @@ plt.xticks(fontsize=18)
 plt.yticks(fontsize=18)
 
 if save_mode:
-    plt.savefig("average_prediction_3way_OUprocess.png", dpi=100)
+    plt.savefig(os.path.join(figures_folder,"average_prediction_3way_OUprocess.png"), dpi=100)
     plt.close()
 
 
@@ -248,56 +246,40 @@ if save_mode:
 Figure 5 - plot the prediction errors evolving over time
 '''
 
-vmapped_sigma = vmap(lambda mu_t: sync @ mu_t, in_axes = 1, out_axes = 1)
-predictions = vmapped_sigma(jnp.transpose(x[:,mu_dim,:], (1,0,2)))
+predictions = sync * jnp.transpose(x[:,mu_dim,:], (1,0,2)).squeeze()
 eta_samples = jnp.transpose(x[:,eta_dim,:], (1,0,2)).squeeze()
 p_pe_t_by_n = Pi[eta_dim, eta_dim] * (eta_samples - predictions) # precision weighted prediction errors (T x n_real)
 
-# x_flat = jnp.transpose(x, (1, 0, 2)).reshape(n_var, T * n_real) # unwrap realizations (third dimension) to make one long matrix
+no_bins = 50
+freq_pred_error = np.empty([T_end_PP, no_bins])
+_, bin_edges = np.histogram(p_pe_t_by_n, bins = no_bins)
 
-# mu_flat = x_flat[mu_dim,:] # all realizations, for all timesteps, of blanket states
-# eta_flat = x_flat[eta_dim,:] # all realizations, for all timesteps, of external states
-
-# predictions = sync @ mu_flat # predicted external states = sigma(mu)
-
-# p_pe = Pi[eta_dim, eta_dim] * (eta_flat - predictions) # precision-weighted prediction errors - difference between realization of external state and 'predicted' external state
-
-# p_pe_t_by_n = p_pe.reshape(T,n_real)
-
+for t in range(T_end_PP):
+    freq_pred_error[t,:] = np.histogram(p_pe_t_by_n[t,:], bins= bin_edges)[0]
 
 # #start figure
-# plt.figure()
-# plt.clf()
-# plt.title('Prediction errors $\eta_t - \sigma(\mu_t)$')
+plt.figure()
+plt.clf()
+plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta\eta} (\eta_t - \sigma(\mu_t))$')
 
 # #set up heatmap of prediction error paths
 
-# min_y = prediction_errors.min()
-# max_y = prediction_errors.max()
-# no_bins = 50 #number of bins for frequency dataset
-# bins_pred_error = np.linspace(min_y,max_y, no_bins) #partition prediction error space
-# bin_interval = bins_pred_error[1]-bins_pred_error[0]
-# freq_pred_error = np.empty([T,no_bins])
-
-# for t in range(T):
-#     for i in range(no_bins):
-#         temp = bins_pred_error[i]
-#         freq_pred_error[t,i] = np.sum((prediction_errors[t,:] >= temp- bin_interval/2) * (prediction_errors[t,:] < temp + bin_interval/2))
-
-# t_axis = range(T)
+bin_centers = bin_edges[:-1] + np.diff(bin_edges) / 2.0
+t_axis = range(T_end_PP)
 # #plot heat map of prediction error paths
+plt.contourf(t_axis, bin_centers, freq_pred_error.T, levels=100, cmap='Blues')
 
-# plt.contourf(time, bins_pred_error, freq_pred_error.T, levels=100, cmap='Blues')
+#plot sample prediction error path
+handle = plt.plot(t_axis, p_pe_t_by_n[:T_end_PP,realisation_idx], color = 'darkorange',linewidth=0.8,label='Sample path')
 
-# #plot sample prediction error path
-# handle = plt.plot(range(T), prediction_errors[:,n], color = 'darkorange',linewidth=0.8,label='Sample path')
-
-# #set axis labels and save
-# plt.xlabel('Time')
-# plt.ylabel('$\eta_t - \sigma(\mu_t)$')
-# plt.legend(loc='lower right')
-# plt.savefig("Prediction_errors_time_3wayOU.png", dpi=100)
-
+#set axis labels and save
+plt.xlabel('Time')
+plt.ylabel('$\mathbf{\Pi}_{\eta\eta} (\eta_t - \sigma(\mu_t))$')
+plt.legend(loc='lower right')
+if save_mode:
+    plt.savefig(os.path.join(figures_folder,"Prediction_errors_time_3wayOU.png"), dpi=100)
+    plt.close()
+#%%
 '''
 Figure 6: Plot evolving heatmap of probability density of blanket and internal states over time
 '''
