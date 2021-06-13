@@ -147,7 +147,7 @@ blanket = jnp.linspace(jnp.min(x[:, b_dim, :]) - 1, jnp.max(x[:, b_dim, :]) + 0.
 F_landscape = compute_FE_landscape(blanket, internal, b_eta, sync, S_part_inv, Pi[eta_dim, eta_dim])
 
 realisation_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
-print(f'Sample path index being shown: {realisation_idx}')
+print(f'Sample path index being shown: {realisation_idx}\n')
 
 plt.figure(2)
 plt.title('Free energy $F(b, \mu)$')
