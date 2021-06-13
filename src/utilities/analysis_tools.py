@@ -42,7 +42,9 @@ def compute_FE_landscape(b_domain, mu_domain, b_eta, sync, precision, q_precisio
 def compute_F_over_time(part_states_hist, b_eta, sync, precision, q_precision):
     """
     Computes variational free energy variational free energy of particular states F(pi) where pi = {b, mu} 
-    over time, for multiple parallel realizations of the O-U process
+    over time, for multiple parallel realizations of the O-U process.
+
+    Computes vectorized versions of the log potential and the KL divergence, and then adds them together
     """
 
     bold_eta_over_time = b_eta * part_states_hist[1,:,:] # first row of part_states_hist is blanket states
@@ -95,7 +97,7 @@ def compute_Fboldmu_blanket_landscape(s_domain, a_domain, b_mu, part_precision):
 
 def compute_Fboldmu_blanket_over_time(blanket_hist, b_mu, part_precision):
     """
-    Computes particular free energy F(a, s, bold_mu) over time
+    Computes particular free energy F(a, s, bold_mu) over time. Free energy only consist of the log potential term in this case
     """
 
     bold_mu_over_time = lambda blankets: b_mu @ blankets
