@@ -4,7 +4,7 @@ from jax import random, jacfwd
 
 import numpy as np
 
-global_key = random.PRNGKey(50)
+global_key = random.PRNGKey(50) # default used if no key is passed into `initialize_2d_OU` function
 
 def initialize_2d_OU(rng_key = None):
     """

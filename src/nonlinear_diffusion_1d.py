@@ -6,11 +6,24 @@ from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import seaborn as sns
 
-key = random.PRNGKey(0) # fix random seed for reproducibility
+initialization_key = 0   # default configuration 
+
+key = random.PRNGKey(initialization_key) # fix random seed for reproducibility
+
+save_mode = True
 
 figures_folder = 'figures'
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
+
+figures_folder = os.path.join(figures_folder, '1d_nonlinear_diffusion')
+if not os.path.isdir(figures_folder):
+    os.mkdir(figures_folder)
+
+seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+if not os.path.isdir(seed_folder):
+    os.mkdir(seed_folder)
+
 
 n_var, dt, T, n_real = 1, 10 ** (-2), 5 * 10 ** 2, 10 ** 5 # duration of single time-step, total number of integration timesteps, number of parallel paths to simulate
 Pi = jnp.array([[1.0]])
@@ -50,6 +63,10 @@ plt.hist(x0[0, :], bins=100)
 plt.suptitle('Initial (stationary) distribution')
 plt.xlabel('x axis')
 plt.ylabel('y axis')
+if save_mode:
+    figure_name = "initial_distribution.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+
 
 '''
 Show results of simulation
@@ -63,6 +80,11 @@ plt.plot(range(T), x_t[:, 0, 1], linewidth=0.4)
 plt.plot(range(T), x_t[:, 0, 2], linewidth=0.4)
 plt.xlabel('time $t$')
 plt.ylabel('$x_t$')
+if save_mode:
+    figure_name = "sample_path_1d_diffusion.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()
+
 
 # 2D histogram of last time-step
 t = int(T / 2)  # intermediate time
@@ -72,6 +94,11 @@ plt.hist(x_t[t:, 0, :].reshape(t * n_real), bins=100)
 plt.suptitle('Longtime distribution')
 plt.xlabel('x axis')
 plt.ylabel('y axis')
+if save_mode:
+    figure_name = "longtime_distribution_1d_diffusion.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()
+
 
 # 2D histogram to show not a Gaussian process
 plt.figure()
@@ -79,6 +106,10 @@ plt.hist2d(x_t[t, 0, :], x_t[-1, 0, :], bins=(50, 50), cmap=cm.jet)
 plt.suptitle('Joint probability at two different times')
 plt.xlabel('$x_s$')
 plt.ylabel('$x_t$')
+if save_mode:
+    figure_name = "joint_probability_twotimes_1d_diffusion.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()
 
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
@@ -94,4 +125,7 @@ fig = plt.gcf()
 ratio = 1.3
 len = 5
 fig.set_size_inches(ratio * len, len, forward=True)
-plt.savefig(os.path.join(figures_folder,"non-Gaussian_diffprocess.png"), dpi=100)
+if save_mode:
+    figure_name = "non-Gaussian_diffprocess_1d_diffusion.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()

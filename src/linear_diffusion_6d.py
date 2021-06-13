@@ -17,7 +17,7 @@ from configs.config_6d import initialize_6d_OU
 
 initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
 
-# other interesting seeds (that I know work, i.e. the initialization conditions don't break due to Sylvester reconstruction error)
+# other interesting seeds (that I know work - by which I mean the initialization conditions don't break due to inequality of Sylvester relation)
 # initialization_key = 16   
 # initialization_key = 14   
 # initialization_key = 13   

@@ -13,21 +13,32 @@ from scipy.stats import pearsonr
 # import the 3way configuration variables 
 from configs.config_3d import initialize_3d_nonlinear
 
-key = random.PRNGKey(1) # fix random seed for reproducibility
+initialization_key = 1
+key = random.PRNGKey(initialization_key) # fix random seed for reproducibility
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
 
+save_mode = True
+
 figures_folder = 'figures'
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
+
+figures_folder = os.path.join(figures_folder, '3d_nonlinear_diffusion')
+if not os.path.isdir(figures_folder):
+    os.mkdir(figures_folder)
+
+seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+if not os.path.isdir(seed_folder):
+    os.mkdir(seed_folder)
 
 '''
 Import the parameters of the state-dependent drift/diffusion process
 '''
 
 flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = 'default')
-# flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = random.PRNGKey(2)) # if you want to randomly initialize the precision matrix
+# flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = key) # if you want to randomly initialize the precision matrix
 
 n_var = 3       # dimensionality
 
@@ -79,8 +90,10 @@ fig = plt.gcf()
 ratio = 1.3
 fig_length = 5
 fig.set_size_inches(ratio * fig_length, fig_length, forward=True)
-plt.savefig(os.path.join(figures_folder,"longtime_distribution_3way.png"), dpi=100)
-plt.close()
+if save_mode:
+    figure_name = "longtime_distribution_3d_diffusion.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()
 
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
@@ -96,8 +109,11 @@ fig = plt.gcf()
 ratio = 1.3
 fig_length = 5
 fig.set_size_inches(ratio * fig_length, fig_length, forward=True)
-plt.savefig(os.path.join(figures_folder,"non-Gaussian_diffprocess_3way.png"), dpi=100)
-plt.close()
+
+if save_mode:
+    figure_name = "non-Gaussian_diffprocess_3d_diffusion.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()
 
 
 '''
@@ -143,6 +159,9 @@ plt.ylabel('External state space $\mathcal{E}$')
 cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
 plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
 plt.legend(loc='upper right')
-plt.savefig(os.path.join(figures_folder, "sync_map_3way_diffprocess.png"), dpi=100)
-plt.close()
+
+if save_mode:
+    figure_name = "sync_map_3d_diffusion.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()
 

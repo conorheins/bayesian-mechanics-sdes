@@ -15,7 +15,12 @@ from matplotlib.patches import Patch
 # import the 3way configuration variables 
 from configs.config_3d import initialize_3d_OU
 
-key = random.PRNGKey(0)
+# initialization_key = 0 # default
+# initialization_key = 1
+initialization_key = 2
+
+
+key = random.PRNGKey(initialization_key)
 
 save_mode = True
 
@@ -26,13 +31,22 @@ if save_mode:
     figures_folder = 'figures'
     if not os.path.isdir(figures_folder):
         os.mkdir(figures_folder)
+    
+    figures_folder = os.path.join(figures_folder, '3d_bayesmech')
+    if not os.path.isdir(figures_folder):
+        os.mkdir(figures_folder)
+
+    seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+    if not os.path.isdir(seed_folder):
+        os.mkdir(seed_folder)
+
 
 '''
 Setting up the steady-state
 '''
 
-flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_OU(rng_key = 'default')
-# flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_OU(rng_key = random.PRNGKey(1)) # if you want to randomly initialize the quantities of interest
+flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_OU(rng_key = 'default') # default parameterisation, gives a pre-defined steady-state / precision matrix
+# flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_OU(rng_key = key) # if you want to randomly initialize the quantities of interest
 
 n_var = 3       # dimensionality
 
@@ -107,7 +121,8 @@ plt.ylabel('External state-space $\mathcal{E}$')
 # plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
 plt.legend(loc='upper right')
 if save_mode:
-    plt.savefig(os.path.join(figures_folder, "sync_map_3wayOUprocess.png"), dpi=100)
+    figure_name = "sync_map_3wayOUprocess.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
     plt.close()
 
 '''
@@ -163,8 +178,10 @@ mu_trajectory = x[:T_end_fe, mu_dim, realisation_idx].squeeze()
 plot_hot_colourline(blanket_trajectory, mu_trajectory, lw=0.5)
 plt.text(s='$\mathbf{\mu}(b)$', x= x[:T_end_fe, b_dim, :].min()  - 0.7, y= b_mu * (x[:T_end_fe, b_dim, :].min() - 0.7) + 0.2, color='white')
 plt.text(s='$(b_t, \mu_t)$', x=x[1, b_dim, realisation_idx] - 1.2, y=x[1, mu_dim, realisation_idx] + 0.3, color='black')
+
 if save_mode:
-    plt.savefig(os.path.join(figures_folder,"Sample_perturbed_3wayOU.png"), dpi=100)
+    figure_name = "Sample_perturbed_3wayOU.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
     plt.close()
 
 
@@ -186,8 +203,11 @@ xlabel_pos = int(T_end_fe * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mu_t)$', x=xlabel_pos, y=mean_F[xlabel_pos] + 0.05 * (np.max(mean_F) - mean_F[xlabel_pos]), color='black')
 plt.xlabel('Time')
 plt.ylabel('Free energy $F(b_t, \mu_t)$')
+plt.xlim(0, T_end_fe)
+
 if save_mode:
-    plt.savefig(os.path.join(figures_folder,"FE_vs_time_perturbed_3wayOU.png"), dpi=100)
+    figure_name = "FE_vs_time_perturbed_3wayOU.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
     plt.close()
 
 '''
@@ -219,7 +239,7 @@ mu1_mean_line = plt.plot(t_axis,posterior_means, color='#27739c',label='Predicti
 
 ci_patch_1 = Patch(color='#4ba2d1',alpha=0.2, label=' ')
 
-first_legend = plt.legend(handles=[ci_patch_1], fontsize=18, loc=(0.27,0.135), ncol = 1)
+first_legend = plt.legend(handles=[ci_patch_1], fontsize=20, loc=(0.265,0.121), ncol = 1)
 # Add the legend manually to the current Axes.
 plt.gca().add_artist(first_legend)
 plt.legend(handles=[mu1_mean_line[0], eta1_real_line[0]], loc='lower center', ncol = 1,  fontsize=18)
@@ -238,7 +258,8 @@ plt.xticks(fontsize=18)
 plt.yticks(fontsize=18)
 
 if save_mode:
-    plt.savefig(os.path.join(figures_folder,"average_prediction_3way_OUprocess.png"), dpi=100)
+    figure_name = "average_prediction_3way_OUprocess.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
     plt.close()
 
 
@@ -260,7 +281,7 @@ for t in range(T_end_PP):
 # #start figure
 plt.figure()
 plt.clf()
-plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta\eta} (\eta_t - \sigma(\mu_t))$')
+plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$')
 
 # #set up heatmap of prediction error paths
 
@@ -274,17 +295,19 @@ handle = plt.plot(t_axis, p_pe_t_by_n[:T_end_PP,realisation_idx], color = 'darko
 
 #set axis labels and save
 plt.xlabel('Time')
-plt.ylabel('$\mathbf{\Pi}_{\eta\eta} (\eta_t - \sigma(\mu_t))$')
+plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$')
 plt.legend(loc='lower right')
+
 if save_mode:
-    plt.savefig(os.path.join(figures_folder,"Prediction_errors_time_3wayOU.png"), dpi=100)
+    figure_name = "Prediction_errors_time_3wayOU.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
     plt.close()
-#%%
+
 '''
 Figure 6: Plot evolving heatmap of probability density of blanket and internal states over time
 '''
 
-# Run perturbation experiments with way more realizations but fewer time
+# Run perturbation experiments with way more realizations but shorter time
 T, n_real = 150, 2 * 10**4
 
 _, key = random.split(key)
@@ -309,8 +332,8 @@ density_over_time, b_bin_centers, mu_bin_centers = plot_b_mu_evolving_density(x,
                                     start_T = 0, end_T = T, forward_window = 5,
                                     plot_average = True, plot_paths = True)
 if save_mode:
-    plt.savefig(os.path.join(figures_folder,"path_density_3wayOU.png"), dpi=100)
+    figure_name = "path_density_3wayOU.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
     plt.close()
-
 
 

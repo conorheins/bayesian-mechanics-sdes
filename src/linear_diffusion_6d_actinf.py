@@ -15,10 +15,10 @@ import matplotlib.cm as cm
 
 from configs.config_6d import initialize_6d_OU
 
-# initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
+initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
 # initialization_key = 20    # this one's good too
 # initialization_key = 25   # in this one, on the way to steady state the trajectory doesn't quite go along the most likely line, but goes parallel to it
-initialization_key = 26   # lots of solenoidal, kinda avoids the most-likely sensory/active state line
+# initialization_key = 26   # lots of solenoidal, kinda avoids the most-likely sensory/active state line
 
 # fix random seed for reproducibility
 key = random.PRNGKey(initialization_key)   
