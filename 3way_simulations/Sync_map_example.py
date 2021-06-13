@@ -1,5 +1,5 @@
 '''
-Simulations synchroinsation map, 3 way OU process
+Simulations synchronisation map, 3 way OU process
 '''
 
 import numpy as np
@@ -97,4 +97,3 @@ plt.title(f'Pearson correlation = {np.round(cor[0],6)}...')
 #plt.xlim(-4, 4)
 #plt.ylim(-4, 4)
 plt.savefig("Prediction_sync_map_example.png", dpi=100)
-

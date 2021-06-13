@@ -1,8 +1,6 @@
 '''
-Simulations synchroinsation map (non-example)
+Simulations synchronisation map (non-example)
 '''
-
-
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -98,6 +96,3 @@ plt.legend(loc='upper right')
 cor = stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
 plt.title(f'Pearson correlation = {np.round(cor[0],6)}')
 plt.savefig("Prediction_sync_map_non-example.png", dpi=100)
-
-
-
