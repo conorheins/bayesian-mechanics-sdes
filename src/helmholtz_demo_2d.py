@@ -15,7 +15,9 @@ import matplotlib.pyplot as plt
 
 from configs.config_2d import initialize_2d_OU
 
-initialization_key = 50    # default configuration in `config_2d.py` file if no key is passed
+# initialization_key = 50    # default configuration in `config_2d.py` file if no key is passed
+initialization_key = 45    # default configuration in `config_2d.py` file if no key is passed
+
 key = random.PRNGKey(initialization_key)   
 
 save_mode = True
@@ -90,7 +92,8 @@ plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free e
 plt.suptitle('Full dynamic')
 plt.title(r'$dx_t = b_{rev}(x_t)dt+b_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$')
 
-plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5)
+plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
+# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 if save_mode:
     figure_name = "Helmholtz_complete.png"
@@ -108,10 +111,10 @@ if save_mode:
 Conservative simulation
 '''
 
-B = flow_parameters['Q'] @ stationary_stats['Pi']  # drift matrix
+B_conservative = flow_parameters['Q'] @ stationary_stats['Pi']  # drift matrix
 
 # Setting up the OU process
-conservative_process = LinearProcess(dim=n_var, friction=flow_parameters['B'], volatility= jnp.zeros((n_var, n_var)))  # create process
+conservative_process = LinearProcess(dim=n_var, friction=B_conservative, volatility= jnp.zeros((n_var, n_var)))  # create process
 
 _, key = random.split(key)
 x = conservative_process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
@@ -126,7 +129,8 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-irreversible')
 plt.title(r'$dx_t = b_{irrev}(x_t)dt$')
-plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5)
+plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
+# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 if save_mode:
     figure_name = "Helmholtz_conservative.png"
@@ -145,10 +149,10 @@ if save_mode:
 Dissipative simulation
 '''
 
-B = flow_parameters['D'] @ stationary_stats['S']  # drift matrix
+B_dissipative = flow_parameters['D'] @ stationary_stats['S']  # drift matrix
 
 # Setting up the OU process
-dissipative_process = LinearProcess(dim=n_var, friction=B, volatility=flow_parameters['sigma'])  # create process
+dissipative_process = LinearProcess(dim=n_var, friction=B_dissipative, volatility=flow_parameters['sigma'])  # create process
 
 _, key = random.split(key)
 x = dissipative_process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
@@ -163,7 +167,8 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-reversible')
 plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$')
-plot_hot_colourline(x[:, 0, real_idx].reshape(T), x[:, 1, real_idx].reshape(T), lw=0.5)
+plot_hot_colourline(x[:, 0, real_idx].reshape(T), x[:, 1, real_idx].reshape(T), lw=0.5) # warning: this runs slow for long trajectories
+# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point
 
 if save_mode:
     figure_name = "Helmholtz_dissipative.png"
