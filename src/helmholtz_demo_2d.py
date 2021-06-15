@@ -148,7 +148,7 @@ Dissipative simulation
 B = flow_parameters['D'] @ stationary_stats['S']  # drift matrix
 
 # Setting up the OU process
-dissipative_process = LinearProcess(dim=n_var, friction=flow_parameters['B'], volatility=flow_parameters['sigma'])  # create process
+dissipative_process = LinearProcess(dim=n_var, friction=B, volatility=flow_parameters['sigma'])  # create process
 
 _, key = random.split(key)
 x = dissipative_process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
