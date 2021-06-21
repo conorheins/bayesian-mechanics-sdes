@@ -99,6 +99,8 @@ if save_mode:
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
 
+plt.figure()
+
 # Custom the inside plot: options are: “scatter” | “reg” | “resid” | “kde” | “hex”
 sns.set(style="white", color_codes=True)
 sns.jointplot(x=x_t[t, 0, :], y=x_t[-1, 0, :], kind='hex', space=0, cmap='Blues', color='skyblue')
@@ -156,25 +158,26 @@ for unique_bin_idx in range(len(unique_bins)):
 # map the empirical most likely internal state to a corresponding expected external state, via the synchronization map
 sync_boldmu = sync * mu_cond_b
 
-plt.figure(figsize=(14,10))
-# plt.suptitle('Synchronisation map',fontsize=16, y = 0.99)
+# plt.figure(figsize=(14,10))
+plt.figure()
+
+plt.suptitle('Synchronisation map',fontsize=16, y = 0.99)
 
 show_every = 5 # can downsample the number of points shown, in order to de-clutter the plot
 bins_to_show = bin_centers[bin_counts > 1000][::show_every]
 sync_boldmu_to_show = sync_boldmu[bin_counts > 1000][::show_every]
 bold_eta_emp_to_show = eta_cond_b[bin_counts > 1000][::show_every]
 
-
 plt.scatter(bins_to_show, sync_boldmu_to_show, s=10, alpha=0.5, label='Prediction: $\sigma(\mathbf{\mu}(b_t))$')  # scatter plot theoretical expected internal state
 plt.scatter(bins_to_show, bold_eta_emp_to_show, s=10, alpha=0.5, label='External: $\mathbf{\eta}(b_t)$')
 plt.xlabel('Blanket state space $\mathcal{B}$',fontsize=14)
 plt.ylabel('External state space $\mathcal{E}$',fontsize=14)
 cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
-plt.title('Synchronisation map',fontsize=16)
+plt.title(f'Pearson correlation = {np.round(cor, 6)}...',fontsize=14)
 
-plt.gcf().text(0.55, 0.6, f'R = {np.round(cor, 6)}...', fontsize=14)
+# plt.title('Synchronisation map',fontsize=16)
+# plt.gcf().text(0.55, 0.6, f'R = {np.round(cor, 6)}...', fontsize=14)
 
-# plt.title(f'Pearson correlation = {np.round(cor, 6)}...',fontsize=14)
 plt.legend(loc='upper right',fontsize=16)
 plt.autoscale(enable=True, axis='x', tight=True)
 plt.xticks(fontsize=14)

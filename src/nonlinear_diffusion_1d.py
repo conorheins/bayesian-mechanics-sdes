@@ -113,7 +113,8 @@ if save_mode:
 
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
-plt.figure(figsize=(14,10))
+# plt.figure(figsize=(14,10))
+plt.figure()
 # Custom the inside plot: options are: “scatter” | “reg” | “resid” | “kde” | “hex”
 sns.set(style="white", color_codes=True)
 sns.jointplot(x=x_t[t, 0, :], y=x_t[-1, 0, :], kind='hex', space=0, cmap='Blues', color='skyblue')
@@ -130,10 +131,14 @@ plt.tick_params(axis='both', which='major', pad=-3)
 plt.gcf().text(0.125, 0.9, '$p(x_s)$', fontsize=14)
 plt.gcf().text(0.9, 0.7, '$p(x_t)$', fontsize=14)
 
+# plt.subplots_adjust(bottom = 0.2)
 fig = plt.gcf()
-ratio = 1.3
+width_ratio = 1.3
+height_ratio = 1.0
 fig_length = 5
-fig.set_size_inches(ratio * fig_length, fig_length, forward=True)
+fig.set_size_inches(width_ratio * fig_length, height_ratio * fig_length, forward=True)
+
+plt.gcf().tight_layout(rect=[0.0,0.0,1.0,1.0]) 
 
 if save_mode:
     figure_name = "non-Gaussian_diffprocess_1d_diffusion.png"
