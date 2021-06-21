@@ -15,14 +15,14 @@ import matplotlib.cm as cm
 
 from configs.config_6d import initialize_6d_OU
 
-initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
+# initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
 
 # other interesting seeds (that I know work - by which I mean the initialization conditions don't break due to inequality of Sylvester relation)
 # initialization_key = 16   
 # initialization_key = 14   
 # initialization_key = 13   
 # initialization_key = 11   
-# initialization_key = 4  # decent one, some solenoidal flow but not too much
+initialization_key = 4  # decent one, some solenoidal flow but not too much
 # initialization_key = 3  # decent one
 # initialization_key = 2  # not too much solenoidal, nearly straight descent to VFE minimum
 
@@ -101,7 +101,11 @@ active = jnp.linspace(jnp.min(x[:, a_dim, :]) - 1, jnp.max(x[:, a_dim, :]) + 0.5
 
 Z = compute_Fboldmu_blanket_landscape(sensory, active, b_mu, S_part_inv)
 
-real_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
+# real_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
+# real_idx = 20  # this will be in the index of the sample path if the `initialization_key` is 4
+real_idx = 25  # this will be in the index of the sample path if the `initialization_key` is 4
+
+
 print(f'Sample path index being shown: {real_idx}\n')
 
 plt.figure(1)
@@ -168,7 +172,7 @@ pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,
 pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
 
 t_axis = np.arange(T_end_PP)
-plt.figure(figsize=(19,12))
+plt.figure(figsize=(14,10))
 plt.clf()
 plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=30, pad = 10)
 
@@ -238,7 +242,7 @@ pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,
 pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
 
 t_axis = np.arange(T_end_PP)
-plt.figure(figsize=(19,12))
+plt.figure(figsize=(14,10))
 plt.clf()
 plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=30, pad = 10)
 
@@ -307,7 +311,7 @@ pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,
 pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
 
 t_axis = np.arange(T_end_PP)
-plt.figure(figsize=(19,12))
+plt.figure(figsize=(14,10))
 plt.clf()
 plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=30, pad = 10)
 
@@ -404,14 +408,18 @@ ci_patch = Patch(color='blue',alpha=0.4, label='Covariance at steady-state')
 
 #plotting of figure elements
 
-plt.legend(handles=[dots, ci_patch], loc='upper right',fontsize=20)
+plt.legend(handles=[dots, ci_patch], loc='lower right',fontsize=20)
 legend = ax.get_legend()
 legend.legendHandles[0].set_color(cm.hot(0.01))
 
 plt.gca().tick_params(axis='both', which='both', labelsize=25)
 
-plt.gca().set_xlabel('$\mathbf{\epsilon}_1$',fontsize=30)
-plt.gca().set_ylabel('$\mathbf{\epsilon}_2$',fontsize=30)
+# plt.gca().set_xlabel('$\mathbf{\epsilon}_1$',fontsize=30)
+# plt.gca().set_ylabel('$\mathbf{\epsilon}_2$',fontsize=30)
+
+plt.gca().set_xlabel(r'$\xi_1$',fontsize=30)
+plt.gca().set_ylabel(r'$\xi_2$',fontsize=30)
+
 
 if save_mode:
     figure_name = f'ppe_cov_plot_boldmu_b_t.png'
@@ -466,14 +474,17 @@ ci_patch = Patch(color='blue',alpha=0.4, label='Covariance at steady-state')
 
 #plotting of figure elements
 
-plt.legend(handles=[dots, ci_patch], loc='upper right',fontsize=20)
+plt.legend(handles=[dots, ci_patch], loc='lower right',fontsize=20)
 legend = ax.get_legend()
 legend.legendHandles[0].set_color(cm.hot(0.01))
 
 plt.gca().tick_params(axis='both', which='both', labelsize=25)
 
-plt.gca().set_xlabel('$\mathbf{\epsilon}_1$',fontsize=30)
-plt.gca().set_ylabel('$\mathbf{\epsilon}_2$',fontsize=30)
+# plt.gca().set_xlabel('$\mathbf{\epsilon}_1$',fontsize=30)
+# plt.gca().set_ylabel('$\mathbf{\epsilon}_2$',fontsize=30)
+
+plt.gca().set_xlabel(r'$\xi_1$',fontsize=30)
+plt.gca().set_ylabel(r'$\xi_2$',fontsize=30)
 
 if save_mode:
     figure_name = f'ppe_cov_plot_sigma_mu_t.png'
