@@ -34,11 +34,11 @@ def initialize_2d_OU(rng_key = None):
     while (np.linalg.eigvals(Pi) <= 0).any():
         Pi -= 2 * np.linalg.eigvals(Pi).min() * np.eye(n_var)
     
-    Pi = jnp.array(Pi) # convert back to JAX array at the end
+    Pi = jnp.array(np.round(Pi,1)) # convert back to JAX array at the end
 
     # arbitrary volatility matrix
     # sigma = jnp.diag(random.normal(next_key, shape=(n_var,))) # arbitrary diagonal volatility matrix
-    sigma = random.normal(next_key, shape=(n_var,n_var))
+    sigma = jnp.round(random.normal(next_key, shape=(n_var,n_var)),1)
     _, next_key = random.split(next_key)
 
         #diffusion tensor
@@ -50,7 +50,7 @@ def initialize_2d_OU(rng_key = None):
     Q = random.normal(next_key, shape=(n_var,n_var))  # arbitrary solenoidal flow
     _, next_key = random.split(next_key)
 
-    Q = 5. * (Q - Q.T) # ensure anti-symmetry
+    Q = jnp.round(5. * (Q - Q.T), 1) # ensure anti-symmetry
 
     # Compute the stationary covariance
     S = inv(Pi)
