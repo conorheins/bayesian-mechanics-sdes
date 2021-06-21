@@ -111,7 +111,7 @@ print(f'Sample path index being shown: {real_idx}\n')
 # plt.figure(figsize=(14,10))
 plt.figure(1)
 plt.clf()
-plt.title('Free energy $F(b_t, \mathbf{\mu}_t)$',fontsize=16)
+plt.title('Free energy $F(b, \mathbf{\mu})$',fontsize=16)
 plt.contourf(sensory, active, Z, levels=100, cmap='turbo')  # plotting the free energy landscape
 plt.colorbar()
 plt.xlabel('blanket state $b_1$',fontsize=14)
@@ -170,15 +170,14 @@ eta_path = x[:T_end_PP,eta_dim, real_idx ].squeeze()
 posterior_means = b_eta.dot(b_path.T) # Lance's addition, now we use sigma(bold_mu(b)) for the mapping instead of the realized internal state
 
 posterior_cov = inv(Pi[np.ix_(eta_dim,eta_dim)])
-posterior_stds = sqrtm(posterior_cov)
 
 # compute the marginal predictions with confidence intervals overlaid
-conf_interval_param =1.96
-pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_stds[0,0]
-pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_stds[0,0]
+conf_interval_param = 2.0
+pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_cov[0,0]
+pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_cov[0,0]
 
-pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,1]
-pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
+pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_cov[1,1]
+pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_cov[1,1]
 
 t_axis = np.arange(T_end_PP)
 # plt.figure(figsize=(14,10))
@@ -240,15 +239,14 @@ eta_path = x[:T_end_PP,eta_dim, real_idx ].squeeze()
 posterior_means = sync.dot(mu_path.T) # my edit to Lance's version, looks better for default seed (with lots of solenoidal flow) if we use sigma(mu_t) for the mapping instead of the realized blanket states
 
 posterior_cov = inv(Pi[np.ix_(eta_dim,eta_dim)])
-posterior_stds = sqrtm(posterior_cov)
 
 # compute the marginal predictions with confidence intervals overlaid
-conf_interval_param =1.96
-pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_stds[0,0]
-pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_stds[0,0]
+conf_interval_param = 2.0
+pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_cov[0,0]
+pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_cov[0,0]
 
-pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,1]
-pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
+pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_cov[1,1]
+pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_cov[1,1]
 
 t_axis = np.arange(T_end_PP)
 plt.clf()
@@ -300,7 +298,7 @@ Figure 4: Evoked response plots (showing how conditional distribution over exter
 over time, locked to beginning of the blanket-state perturbation. 
 ENSEMBLE AVERAGE VARIANT. Average internal states across realizations and map average path through sigma(<mu_t>). Overlays multiple external states paths.
 '''
-# %%
+
 T_end_PP= 200 # up to what timestep to show for the predictive processing simulations 
 
 mean_trajectory = x.mean(axis=2)
@@ -308,15 +306,14 @@ eta_paths = x[:T_end_PP,eta_dim,:]
 posterior_means = sync.dot(mean_trajectory[:T_end_PP,mu_dim].T)
 
 posterior_cov = inv(Pi[np.ix_(eta_dim,eta_dim)])
-posterior_stds = sqrtm(posterior_cov)
 
 # compute the marginal predictions with confidence intervals overlaid
-conf_interval_param =1.96
-pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_stds[0,0]
-pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_stds[0,0]
+conf_interval_param = 2.0
+pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_cov[0,0]
+pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_cov[0,0]
 
-pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,1]
-pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
+pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_cov[1,1]
+pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_cov[1,1]
 
 t_axis = np.arange(T_end_PP)
 plt.clf()
