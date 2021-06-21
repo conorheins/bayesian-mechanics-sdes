@@ -108,13 +108,17 @@ real_idx = 25  # this will be in the index of the sample path if the `initializa
 
 print(f'Sample path index being shown: {real_idx}\n')
 
+# plt.figure(figsize=(14,10))
 plt.figure(1)
 plt.clf()
-plt.title('Free energy $F(b_t, \mathbf{\mu}_t)$')
+plt.title('Free energy $F(b_t, \mathbf{\mu}_t)$',fontsize=16)
 plt.contourf(sensory, active, Z, levels=100, cmap='turbo')  # plotting the free energy landscape
 plt.colorbar()
-plt.xlabel('blanket state $b_1$')
-plt.ylabel('blanket state $b_2$')
+plt.xlabel('blanket state $b_1$',fontsize=14)
+plt.ylabel('blanket state $b_2$',fontsize=14)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
 plot_hot_colourline(x[:, s_dim, real_idx].reshape(T), x[:, a_dim, real_idx].reshape(T), lw=0.5)
 plt.text(s='$b_t$', x=x[1, s_dim, real_idx] - 1, y=x[1, a_dim, real_idx]+0.5, color='black',fontsize=16)
 if save_mode:
@@ -131,15 +135,20 @@ blanket_hist = jnp.transpose(x[:,b_dim,:], (1, 0, 2))
 F_trajectories = compute_Fboldmu_blanket_over_time(blanket_hist, b_mu, S_part_inv)
 mean_F = F_trajectories.mean(axis=0)
 
+# plt.figure(figsize=(14,10))
 plt.figure(2)
 plt.clf()
-plt.title('Average free energy over time')
+plt.title('Average free energy over time',fontsize=16)
 plot_hot_colourline(np.arange(T), mean_F)
 xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(b_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (mean_F.max() - mean_F[xlabel]),
-         color='black')
-plt.xlabel('Time')
-plt.ylabel('Free energy $F(b_t, \mathbf{\mu}_t)$')
+         color='black',fontsize=16)
+plt.xlabel('Time',fontsize=14)
+plt.ylabel('Free energy $F(b_t, \mathbf{\mu}_t)$',fontsize=14)
+
+# plt.autoscale(enable=True, axis='x', tight=True)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 if save_mode:
     figure_name = f'FE_vs_time_perturbed_6wayOU.png'
@@ -172,9 +181,10 @@ pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,
 pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
 
 t_axis = np.arange(T_end_PP)
-plt.figure(figsize=(14,10))
+# plt.figure(figsize=(14,10))
+
 plt.clf()
-plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=30, pad = 10)
+plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=16, pad = 10)
 
 plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
 eta1_real_line = plt.plot(t_axis, eta_path[:,0], lw = 0.5, color = 'r', alpha=0.6, label='External: $(\eta_{t})_1$')
@@ -191,25 +201,25 @@ mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89
 ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
 ci_patch_2 = Patch(color='#3de3ac',alpha=0.25, label=' ')
 
-first_legend = plt.legend(handles=[ci_patch_1], loc=(0.1925,0.100), fontsize=30, ncol = 1)
-second_legend = plt.legend(handles=[ci_patch_2], loc=(0.1925,0.028), fontsize=30, ncol = 1)
-
-# Add the legend manually to the current Axes.
-plt.gca().add_artist(first_legend)
-plt.gca().add_artist(second_legend)
-
-plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower center',fontsize=28, ncol = 2)
-
 min_value = min( ( pred_lower_CI_mu0.min(), eta_path[:,0].min() ) )
 max_value = max( ( (pred_upper_CI_mu1 + plot_offset).max(), (eta_path[:,1]+plot_offset).max() ) )
 total = max_value-min_value
 
 plt.xlim(t_axis[0], t_axis[-1])
-plt.ylim(min_value - 0.2*total, max_value + 0.1*total)
+plt.ylim(min_value - 0.5*total, max_value + 0.1*total)
 
-plt.gca().tick_params(axis='both', which='both', labelsize=25)
-plt.gca().set_xlabel('Time',fontsize=30)
-plt.gca().set_ylabel('External state-space $\mathcal{E}$',fontsize=30)
+first_legend = plt.legend(handles=[ci_patch_1], loc=(0.0745,0.142), fontsize=14, ncol = 1)
+second_legend = plt.legend(handles=[ci_patch_2], loc=(0.0745,0.0320), fontsize=14, ncol = 1)
+
+# Add the legend manually to the current Axes.
+plt.gca().add_artist(first_legend)
+plt.gca().add_artist(second_legend)
+
+plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower center',fontsize=12, ncol = 2)
+
+plt.gca().tick_params(axis='both', which='both', labelsize=14)
+plt.gca().set_xlabel('Time',fontsize=14)
+plt.gca().set_ylabel('External state-space $\mathcal{E}$',fontsize=14)
 
 if save_mode:
     figure_name = f'singlepath_prediction_blanket_perturbation_bpath.png'
@@ -221,7 +231,6 @@ Figure 4b: Evoked response plots (showing how conditional distribution over exte
 over time, locked to beginning of the blanket-state perturbation. 
 SINGLE PATH VARIANT 2 -- EXPECTED EXTERNAL PARAMETERISED BY INTERNAL STATES PATH
 '''
-
 T_end_PP= 200 # up to what timestep to show for the predictive processing simulations 
 
 mu_path = x[:T_end_PP,b_dim, real_idx ].squeeze()
@@ -242,9 +251,8 @@ pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,
 pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
 
 t_axis = np.arange(T_end_PP)
-plt.figure(figsize=(14,10))
 plt.clf()
-plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=30, pad = 10)
+plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=16, pad = 10)
 
 plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
 eta1_real_line = plt.plot(t_axis, eta_path[:,0], lw = 0.5, color = 'r', alpha=0.6, label='External: $(\eta_{t})_1$')
@@ -261,38 +269,38 @@ mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89
 ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
 ci_patch_2 = Patch(color='#3de3ac',alpha=0.25, label=' ')
 
-first_legend = plt.legend(handles=[ci_patch_1], loc=(0.1925,0.100), fontsize=30, ncol = 1)
-second_legend = plt.legend(handles=[ci_patch_2], loc=(0.1925,0.028), fontsize=30, ncol = 1)
-
-# Add the legend manually to the current Axes.
-plt.gca().add_artist(first_legend)
-plt.gca().add_artist(second_legend)
-
-plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower center',fontsize=28, ncol = 2)
-
 min_value = min( ( pred_lower_CI_mu0.min(), eta_path[:,0].min() ) )
 max_value = max( ( (pred_upper_CI_mu1 + plot_offset).max(), (eta_path[:,1]+plot_offset).max() ) )
 total = max_value-min_value
 
 plt.xlim(t_axis[0], t_axis[-1])
-plt.ylim(min_value - 0.2*total, max_value + 0.1*total)
+plt.ylim(min_value - 0.5*total, max_value + 0.1*total)
 
-plt.gca().tick_params(axis='both', which='both', labelsize=25)
-plt.gca().set_xlabel('Time',fontsize=30)
-plt.gca().set_ylabel('External state-space $\mathcal{E}$',fontsize=30)
+first_legend = plt.legend(handles=[ci_patch_1], loc=(0.019,0.163), fontsize=14, ncol = 1)
+second_legend = plt.legend(handles=[ci_patch_2], loc=(0.019,0.0515), fontsize=14, ncol = 1)
+
+# Add the legend manually to the current Axes.
+plt.gca().add_artist(first_legend)
+plt.gca().add_artist(second_legend)
+
+plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower center',fontsize=14, ncol = 2)
+
+plt.gca().tick_params(axis='both', which='both', labelsize=14)
+plt.gca().set_xlabel('Time',fontsize=14)
+plt.gca().set_ylabel('External state-space $\mathcal{E}$',fontsize=14)
+
 
 if save_mode:
     figure_name = f'singlepath_prediction_blanket_perturbation_mupath.png'
     plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
     plt.close()
 
-
 '''
 Figure 4: Evoked response plots (showing how conditional distribution over external states - parameterised with variational mean and variance) changes
 over time, locked to beginning of the blanket-state perturbation. 
 ENSEMBLE AVERAGE VARIANT. Average internal states across realizations and map average path through sigma(<mu_t>). Overlays multiple external states paths.
 '''
-
+# %%
 T_end_PP= 200 # up to what timestep to show for the predictive processing simulations 
 
 mean_trajectory = x.mean(axis=2)
@@ -311,14 +319,13 @@ pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_stds[1,
 pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_stds[1,1]
 
 t_axis = np.arange(T_end_PP)
-plt.figure(figsize=(14,10))
 plt.clf()
-plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=30, pad = 10)
+plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=16, pad = 10)
 
 show_every = 5
 
 plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
-eta1_real_line = plt.plot(t_axis, eta_paths[:,0,::show_every], lw = 0.5, color = 'r', alpha=0.35, label='Sample paths: $(\eta_{t})_1$')
+eta1_real_line = plt.plot(t_axis, eta_paths[:,0,::show_every], lw = 0.5, color = 'r', alpha=0.35, label='External: $(\eta_{t})_1$')
 mu1_mean_line = plt.plot(t_axis,posterior_means[0], color='b',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_1)$',lw=3.0)
 
 maximum_bottom =  max(posterior_means[0].max(), eta_paths[:,0,::show_every].max())
@@ -326,31 +333,32 @@ range_top = max(posterior_means[1].max(), eta_paths[:,1,::show_every].max()) - m
 plot_offset = maximum_bottom + range_top
 
 plt.fill_between(t_axis,pred_upper_CI_mu1 + plot_offset, pred_lower_CI_mu1 + plot_offset, color='#3de3ac', alpha=0.25)
-eta2_real_line = plt.plot(t_axis, eta_paths[:,1,::show_every] + plot_offset, lw = 0.5, color = '#933aab', alpha=0.35, label='Sample paths: $(\eta_{t})_2$')
+eta2_real_line = plt.plot(t_axis, eta_paths[:,1,::show_every] + plot_offset, lw = 0.5, color = '#933aab', alpha=0.35, label='External: $(\eta_{t})_2$')
 mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_2)$',lw=3.0)
 
 ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
 ci_patch_2 = Patch(color='#3de3ac',alpha=0.25, label=' ')
-
-first_legend = plt.legend(handles=[ci_patch_1], loc=(0.162,0.100), fontsize=30, ncol = 1)
-second_legend = plt.legend(handles=[ci_patch_2], loc=(0.162,0.028), fontsize=30, ncol = 1)
-
-# Add the legend manually to the current Axes.
-plt.gca().add_artist(first_legend)
-plt.gca().add_artist(second_legend)
-
-plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower center',fontsize=28, ncol = 2)
 
 min_value = min( ( pred_lower_CI_mu0.min(), eta_path[:,0].min() ) )
 max_value = max( ( (pred_upper_CI_mu1 + plot_offset).max(), (eta_path[:,1]+plot_offset).max() ) )
 total = max_value-min_value
 
 plt.xlim(t_axis[0], t_axis[-1])
-plt.ylim(min_value - 0.2*total, max_value + 0.1*total)
+plt.ylim(min_value - 0.5*total, max_value + 0.1*total)
 
-plt.gca().tick_params(axis='both', which='both', labelsize=25)
-plt.gca().set_xlabel('Time',fontsize=30)
-plt.gca().set_ylabel('External state space $\mathcal{E}$',fontsize=30)
+first_legend = plt.legend(handles=[ci_patch_1], loc=(0.011,0.17), fontsize=15, ncol = 1)
+second_legend = plt.legend(handles=[ci_patch_2], loc=(0.011,0.048), fontsize=15, ncol = 1)
+
+# Add the legend manually to the current Axes.
+plt.gca().add_artist(first_legend)
+plt.gca().add_artist(second_legend)
+
+plt.legend(handles=[mu1_mean_line[0],mu2_mean_line[0], eta1_real_line[0], eta2_real_line[0]], loc='lower center',fontsize=14, ncol = 2)
+
+plt.gca().tick_params(axis='both', which='both', labelsize=14)
+plt.gca().set_xlabel('Time',fontsize=14)
+plt.gca().set_ylabel('External state space $\mathcal{E}$',fontsize=14)
+
 
 if save_mode:
     figure_name = f'average_prediction_blanket_perturbation.png'
@@ -368,8 +376,9 @@ b_flat = x_reshaped[b_dim,:] # all realizations, for all timesteps, of blanket s
 eta_flat = x_reshaped[eta_dim,:] # all realizations, for all timesteps, of external states
 prediction = b_eta @ b_flat # predicted external states, parameterised by boldmu of instantaneous blanket states
 
-fig, ax = plt.subplots(figsize=(14,10))
-plt.title('Precision-weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=26, pad = 10)
+# fig, ax = plt.subplots(figsize=(14,10))
+plt.figure()
+plt.title('Precision-weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=16, pad = 10)
 prediction_errors = Pi[np.ix_(eta_dim, eta_dim)] @ (eta_flat - prediction) # precision-weighted prediction errors - difference between realization of external state and 'predicted' external state
 
 #axis limits
@@ -379,16 +388,16 @@ max_x = prediction_errors[0].max()
 plt.xlim(1.1 * min_x, 1.1 * max_x)
 min_y = prediction_errors[1].min()
 max_y = prediction_errors[1].max()
-plt.ylim(1.1 * min_y, 1.1 * max_y)
+plt.ylim(1.35 * min_y, 1.1 * max_y)
 
 #scatter plot
 
 prediction_errors = prediction_errors.reshape([2,T,n_real])
 
 ind = np.arange(0,T) #indices to plot
-dots = ax.scatter(x=prediction_errors[0,ind,0],y=prediction_errors[1,ind, 0],s=6,label='Precision-weighted prediction errors', c=ind+10**(-3),cmap=cm.hot)
+dots = plt.scatter(x=prediction_errors[0,ind,0],y=prediction_errors[1,ind, 0],s=6,label='Precision-weighted prediction errors', c=ind+10**(-3),cmap=cm.hot)
 for n in range(1,n_real,50):
-    ax.scatter(x=prediction_errors[0,ind,n], y=prediction_errors[1,ind,n], s=6,c=ind+10**(-3), cmap=cm.hot)
+    plt.scatter(x=prediction_errors[0,ind,n], y=prediction_errors[1,ind,n], s=6,c=ind+10**(-3), cmap=cm.hot)
 
 #confidence ellipse
 
@@ -402,24 +411,24 @@ X,Y = np.meshgrid(x_tick,y_tick)
 pos = np.dstack((X, Y))
 rv = multivariate_normal(cov= 1.2*np.cov(pred_errors_ss)) #random normal
 
-ax.contourf(X, Y, rv.pdf(pos)**(1/15), levels=0, colors =['white','blue'],alpha =0.25)
+plt.contourf(X, Y, rv.pdf(pos)**(1/15), levels=0, colors =['white','blue'],alpha =0.25)
 
 ci_patch = Patch(color='blue',alpha=0.4, label='Covariance at steady-state')
 
 #plotting of figure elements
 
-plt.legend(handles=[dots, ci_patch], loc='lower right',fontsize=20)
-legend = ax.get_legend()
+
+plt.legend(handles=[dots, ci_patch], loc='lower right',fontsize=14)
+legend = plt.gca().get_legend()
 legend.legendHandles[0].set_color(cm.hot(0.01))
 
-plt.gca().tick_params(axis='both', which='both', labelsize=25)
+plt.gca().tick_params(axis='both', which='both', labelsize=14)
 
 # plt.gca().set_xlabel('$\mathbf{\epsilon}_1$',fontsize=30)
 # plt.gca().set_ylabel('$\mathbf{\epsilon}_2$',fontsize=30)
 
-plt.gca().set_xlabel(r'$\xi_1$',fontsize=30)
-plt.gca().set_ylabel(r'$\xi_2$',fontsize=30)
-
+plt.gca().set_xlabel(r'$\xi_1$',fontsize=14)
+plt.gca().set_ylabel(r'$\xi_2$',fontsize=14)
 
 if save_mode:
     figure_name = f'ppe_cov_plot_boldmu_b_t.png'
@@ -479,9 +488,6 @@ legend = ax.get_legend()
 legend.legendHandles[0].set_color(cm.hot(0.01))
 
 plt.gca().tick_params(axis='both', which='both', labelsize=25)
-
-# plt.gca().set_xlabel('$\mathbf{\epsilon}_1$',fontsize=30)
-# plt.gca().set_ylabel('$\mathbf{\epsilon}_2$',fontsize=30)
 
 plt.gca().set_xlabel(r'$\xi_1$',fontsize=30)
 plt.gca().set_ylabel(r'$\xi_2$',fontsize=30)
