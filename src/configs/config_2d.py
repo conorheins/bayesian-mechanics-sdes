@@ -37,8 +37,9 @@ def initialize_2d_OU(rng_key = None):
     Pi = jnp.array(np.round(Pi,1)) # convert back to JAX array at the end
 
     # arbitrary volatility matrix
-    # sigma = jnp.diag(random.normal(next_key, shape=(n_var,))) # arbitrary diagonal volatility matrix
-    sigma = jnp.round(random.normal(next_key, shape=(n_var,n_var)),1)
+    # sigma = jnp.round(jnp.diag(random.normal(next_key, shape=(n_var,))),1) # arbitrary diagonal volatility matrix
+    # sigma = jnp.round(random.normal(next_key, shape=(n_var,n_var)),1)
+    sigma = jnp.eye(n_var)
     _, next_key = random.split(next_key)
 
         #diffusion tensor
@@ -63,10 +64,10 @@ def initialize_2d_OU(rng_key = None):
         raise TypeError("Drift should have non-negative spectrum")
         
     # 1) We check it solves the Sylvester equation: BS + SB.T = 2D
-    assert jnp.allclose(B @ S + S @ B.T, 2 * D), "Sylvester equation not solved!"
+    assert jnp.allclose(B @ S + S @ B.T, 2 * D, atol = 1e-5), "Sylvester equation not solved!"
 
     # 2) we check that there are no numerical errors due to ill conditioning
-    assert jnp.allclose(inv(S), Pi), "Precision and inverse covariance are different"
+    assert jnp.allclose(inv(S), Pi, atol = 1e-5), "Precision and inverse covariance are different"
 
     # We check that the stationary covariance is indeed positive definite
     if (eigvals(S) <= 0).any():
