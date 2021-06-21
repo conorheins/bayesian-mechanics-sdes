@@ -15,8 +15,9 @@ import matplotlib.pyplot as plt
 
 from configs.config_2d import initialize_2d_OU
 
-# initialization_key = 50    # default configuration in `config_2d.py` file if no key is passed
-initialization_key = 45    # default configuration in `config_2d.py` file if no key is passed
+initialization_key = 50    # default configuration in `config_2d.py` file if no key is passed
+# initialization_key = 45    # another config
+# initialization_key = 4       # another config
 
 key = random.PRNGKey(initialization_key)   
 
@@ -92,8 +93,8 @@ plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free e
 plt.suptitle('Full dynamic')
 plt.title(r'$dx_t = b_{rev}(x_t)dt+b_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$')
 
-plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
-# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+# plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
+plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 if save_mode:
     figure_name = "Helmholtz_complete.png"
@@ -129,8 +130,8 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-irreversible')
 plt.title(r'$dx_t = b_{irrev}(x_t)dt$')
-plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
-# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+# plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
+plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 if save_mode:
     figure_name = "Helmholtz_conservative.png"
@@ -167,8 +168,8 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-reversible')
 plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$')
-plot_hot_colourline(x[:, 0, real_idx].reshape(T), x[:, 1, real_idx].reshape(T), lw=0.5) # warning: this runs slow for long trajectories
-# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point
+# plot_hot_colourline(x[:, 0, real_idx].reshape(T), x[:, 1, real_idx].reshape(T), lw=0.5) # warning: this runs slow for long trajectories
+plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point
 
 if save_mode:
     figure_name = "Helmholtz_dissipative.png"
