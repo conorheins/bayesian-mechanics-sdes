@@ -14,6 +14,7 @@ from scipy.stats import pearsonr
 from configs.config_3d import initialize_3d_nonlinear
 
 initialization_key = 1
+
 key = random.PRNGKey(initialization_key) # fix random seed for reproducibility
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
@@ -37,8 +38,8 @@ if not os.path.isdir(seed_folder):
 Import the parameters of the state-dependent drift/diffusion process
 '''
 
-flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = 'default')
 # flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = key) # if you want to randomly initialize the precision matrix
+flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_nonlinear(rng_key = 'default')
 
 n_var = 3       # dimensionality
 
@@ -97,13 +98,18 @@ if save_mode:
 
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
+
 # Custom the inside plot: options are: “scatter” | “reg” | “resid” | “kde” | “hex”
 sns.set(style="white", color_codes=True)
 sns.jointplot(x=x_t[t, 0, :], y=x_t[-1, 0, :], kind='hex', space=0, cmap='Blues', color='skyblue')
-plt.xlabel('$x_s$',labelpad=0)
-plt.ylabel('$x_t$',labelpad=0)
+plt.xlabel('$x_s$',labelpad=0,fontsize=14)
+plt.ylabel('$x_t$',labelpad=0,fontsize=14)
+plt.text(s='$p(x_{s},x_{t})$', x=1, y=-1, color='black',size='large')
+
 plt.xlim(-3, 3)
 plt.ylim(-3, 3)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.tick_params(axis='both', which='major', pad=-3)
 fig = plt.gcf()
 ratio = 1.3
@@ -150,15 +156,34 @@ for unique_bin_idx in range(len(unique_bins)):
 # map the empirical most likely internal state to a corresponding expected external state, via the synchronization map
 sync_boldmu = sync * mu_cond_b
 
-plt.figure(1)
-plt.suptitle('Synchronisation map')
-plt.scatter(bin_centers[bin_counts > 1000], sync_boldmu[bin_counts > 1000], s=1, alpha=0.5, label='Prediction: $\sigma(\mathbf{\mu}(b_t))$')  # scatter plot theoretical expected internal state
-plt.scatter(bin_centers[bin_counts > 1000], eta_cond_b[bin_counts > 1000], s=1, alpha=0.5, label='Actual: $\mathbf{\eta}(b_t)$')
-plt.xlabel('Blanket state space $\mathcal{B}$')
-plt.ylabel('External state space $\mathcal{E}$')
+plt.figure(figsize=(14,10))
+# plt.suptitle('Synchronisation map',fontsize=16, y = 0.99)
+
+show_every = 5 # can downsample the number of points shown, in order to de-clutter the plot
+bins_to_show = bin_centers[bin_counts > 1000][::show_every]
+sync_boldmu_to_show = sync_boldmu[bin_counts > 1000][::show_every]
+bold_eta_emp_to_show = eta_cond_b[bin_counts > 1000][::show_every]
+
+
+plt.scatter(bins_to_show, sync_boldmu_to_show, s=10, alpha=0.5, label='Prediction: $\sigma(\mathbf{\mu}(b_t))$')  # scatter plot theoretical expected internal state
+plt.scatter(bins_to_show, bold_eta_emp_to_show, s=10, alpha=0.5, label='External: $\mathbf{\eta}(b_t)$')
+plt.xlabel('Blanket state space $\mathcal{B}$',fontsize=14)
+plt.ylabel('External state space $\mathcal{E}$',fontsize=14)
 cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
-plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
-plt.legend(loc='upper right')
+plt.title('Synchronisation map',fontsize=16)
+
+plt.gcf().text(0.55, 0.6, f'R = {np.round(cor, 6)}...', fontsize=14)
+
+# plt.title(f'Pearson correlation = {np.round(cor, 6)}...',fontsize=14)
+plt.legend(loc='upper right',fontsize=16)
+plt.autoscale(enable=True, axis='x', tight=True)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
+fig = plt.gcf()
+ratio = 1.3
+fig_length = 5
+fig.set_size_inches(ratio * fig_length, fig_length, forward=True)
 
 if save_mode:
     figure_name = "sync_map_3d_diffusion.png"
