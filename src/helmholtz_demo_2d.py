@@ -1,7 +1,6 @@
 '''
 Illustration Helmholtz decomposition of a 2-D OU process
 '''
-
 import os
 from diffusions import LinearProcess
 from utilities import plot_hot_colourline
@@ -15,9 +14,9 @@ import matplotlib.pyplot as plt
 
 from configs.config_2d import initialize_2d_OU
 
-initialization_key = 50    # default configuration in `config_2d.py` file if no key is passed
+# initialization_key = 50    # default configuration in `config_2d.py` file if no key is passed
 # initialization_key = 45    # another config
-# initialization_key = 4       # another config
+initialization_key = 22      # good one
 
 key = random.PRNGKey(initialization_key)   
 
@@ -90,11 +89,17 @@ plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free energy landscape
 
-plt.suptitle('Full dynamic')
-plt.title(r'$dx_t = b_{rev}(x_t)dt+b_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$')
+plt.suptitle('Full dynamic',fontsize=16)
+plt.title(r'$dx_t = b_{rev}(x_t)dt+b_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$', fontsize=14)
 
-# plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
-plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
+plt.xlabel('$x_1$',fontsize=14)
+plt.ylabel('$x_2$',fontsize=14)
+
+plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
+# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 if save_mode:
     figure_name = "Helmholtz_complete.png"
@@ -118,7 +123,7 @@ B_conservative = flow_parameters['Q'] @ stationary_stats['Pi']  # drift matrix
 conservative_process = LinearProcess(dim=n_var, friction=B_conservative, volatility= jnp.zeros((n_var, n_var)))  # create process
 
 _, key = random.split(key)
-x = conservative_process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
+x = conservative_process.integrate(int(1.5*T), n_real, dt, x0, rng_key = key) # run simulation
 
 '''
 Plot trajectory conservative simulation
@@ -128,10 +133,16 @@ plt.figure(4)
 plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
-plt.suptitle('Time-irreversible')
-plt.title(r'$dx_t = b_{irrev}(x_t)dt$')
-# plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
-plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+plt.suptitle('Time-irreversible',fontsize=16)
+plt.title(r'$dx_t = b_{irrev}(x_t)dt$',fontsize=14)
+plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
+# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
+plt.xlabel('$x_1$',fontsize=14)
+plt.ylabel('$x_2$',fontsize=14)
 
 if save_mode:
     figure_name = "Helmholtz_conservative.png"
@@ -150,7 +161,7 @@ if save_mode:
 Dissipative simulation
 '''
 
-B_dissipative = flow_parameters['D'] @ stationary_stats['S']  # drift matrix
+B_dissipative = flow_parameters['D'] @ stationary_stats['Pi']  # drift matrix
 
 # Setting up the OU process
 dissipative_process = LinearProcess(dim=n_var, friction=B_dissipative, volatility=flow_parameters['sigma'])  # create process
@@ -166,10 +177,16 @@ plt.figure(6)
 plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
-plt.suptitle('Time-reversible')
-plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$')
-# plot_hot_colourline(x[:, 0, real_idx].reshape(T), x[:, 1, real_idx].reshape(T), lw=0.5) # warning: this runs slow for long trajectories
-plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point
+plt.suptitle('Time-reversible',fontsize=16)
+plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$',fontsize=14)
+plot_hot_colourline(x[:, 0, real_idx].reshape(T), x[:, 1, real_idx].reshape(T), lw=0.5) # warning: this runs slow for long trajectories
+# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point
+
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+
+plt.xlabel('$x_1$',fontsize=14)
+plt.ylabel('$x_2$',fontsize=14)
 
 if save_mode:
     figure_name = "Helmholtz_dissipative.png"
@@ -189,33 +206,33 @@ if save_mode:
 Plot steady-state density
 '''
 
-rv_eye = multivariate_normal(cov= np.eye(n_var)) #random normal
+# rv_eye = multivariate_normal(cov= np.eye(n_var)) #random normal
 
-lim_x = 2.5
-lim_y = 2.5
+# lim_x = 2.5
+# lim_y = 2.5
 
-x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
-y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
+# x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
+# y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
 
-X,Y = np.meshgrid(x_tick,y_tick)
-pos = np.dstack((X, Y))
+# X,Y = np.meshgrid(x_tick,y_tick)
+# pos = np.dstack((X, Y))
 
-plt.figure(8)
-plt.clf()
-ax = plt.axes(projection='3d')
-ax.plot_surface(X, Y, rv_eye.pdf(pos), rstride=1, cstride=1,cmap='Blues', edgecolor='none')
-ax.grid(False)
-ax.set_zlim(0,1.5* rv_eye.pdf(pos).max() )
-ax.elev +=-15
-ax.axis('off')
-ratio = 1.3
-len = 8
-ax.figure.set_size_inches(ratio * len, len, forward=True)
+# plt.figure(8)
+# plt.clf()
+# ax = plt.axes(projection='3d')
+# ax.plot_surface(X, Y, rv_eye.pdf(pos), rstride=1, cstride=1,cmap='Blues', edgecolor='none')
+# ax.grid(False)
+# ax.set_zlim(0,1.5* rv_eye.pdf(pos).max() )
+# ax.elev +=-15
+# ax.axis('off')
+# ratio = 1.3
+# len = 8
+# ax.figure.set_size_inches(ratio * len, len, forward=True)
 
-if save_mode:
-    figure_name = "3Dplot_Gaussian_density.png"
-    plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
-    plt.close()
+# if save_mode:
+#     figure_name = "3Dplot_Gaussian_density.png"
+#     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
+#     plt.close()
 
 
 
