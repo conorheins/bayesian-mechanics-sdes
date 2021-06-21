@@ -161,7 +161,9 @@ blanket = jnp.linspace(jnp.min(x[:, b_dim, :]) - 1, jnp.max(x[:, b_dim, :]) + 0.
 
 F_landscape = compute_FE_landscape(blanket, internal, b_eta, sync, S_part_inv, Pi[eta_dim, eta_dim])
 
-realisation_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
+realisation_idx = 100  # which sample path to show (between 0 and n_real)
+
+# realisation_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
 print(f'Sample path index being shown: {realisation_idx}\n')
 
 plt.figure(2)
@@ -220,27 +222,30 @@ if save_mode:
 '''
 Figure 4: predictive processing
 '''
-T_end_PP = 800
+T_end_PP = 500
 
 sample_trajectory = x[:T_end_PP,:,realisation_idx] # choose sample trajectory
 
 eta_samples = sample_trajectory[:,eta_dim].squeeze()
-mu_samples = sample_trajectory[:,mu_dim].squeeze()
+# mu_samples = sample_trajectory[:,mu_dim].squeeze()
+b_samples = sample_trajectory[:,b_dim].squeeze()
 
-posterior_means = sync @ mu_samples.reshape(1,-1) # predicted external states, given instantaneous internal states -- sigma(mu)
+
+# posterior_means = sync @ mu_samples.reshape(1,-1) # predicted external states, given instantaneous internal states -- sigma(mu)
+posterior_means = b_eta @ b_samples.reshape(1,-1) # predicted external states, given instantaneous blanket states -- sigma(boldmu)
+
 posterior_cov = inv(Pi[eta_dim,eta_dim][...,None])
-posterior_stds = sqrtm(posterior_cov)
 
-conf_interval_param = 1.96 # 95% of probability mass should lie within approximately 1.96 +/- standard deviations of the mean
+conf_interval_param = 2.0 
 pred_upper_CI_mu0 = posterior_means + conf_interval_param * posterior_cov
 pred_lower_CI_mu0 = posterior_means - conf_interval_param * posterior_cov
 
 t_axis = np.arange(T_end_PP)
-# plt.figure(figsize=(8,6))
 plt.figure()
 
 plt.clf()
-plt.title('Predictive processing: $q_{\mu_t}(\eta)$ vs $\eta_t$',fontsize = 16)
+# plt.title('Predictive processing: $q_{\mu_t}(\eta)$ vs $\eta_t$',fontsize = 16)
+plt.title('Predictive processing: $q_{\mathbf{\mu_t}}(\eta)$ vs $\eta_t$',fontsize = 16)
 
 plt.fill_between(t_axis,pred_upper_CI_mu0[0,:], pred_lower_CI_mu0[0,:], color='#4ba2d1', alpha=0.25)
 eta1_real_line = plt.plot(t_axis, eta_samples, lw = 1.25, color = '#d12f13', alpha=1.0, label='External: $\eta_{t}$')
@@ -276,7 +281,9 @@ if save_mode:
 Figure 5 - plot the prediction errors evolving over time
 '''
 
-predictions = sync * jnp.transpose(x[:,mu_dim,:], (1,0,2)).squeeze()
+# predictions = sync * jnp.transpose(x[:,mu_dim,:], (1,0,2)).squeeze()
+predictions = b_eta * jnp.transpose(x[:,b_dim,:], (1,0,2)).squeeze()
+
 eta_samples = jnp.transpose(x[:,eta_dim,:], (1,0,2)).squeeze()
 p_pe_t_by_n = Pi[eta_dim, eta_dim] * (eta_samples - predictions) # precision weighted prediction errors (T x n_real)
 
@@ -290,7 +297,8 @@ for t in range(T_end_PP):
 # #start figure
 plt.figure()
 plt.clf()
-plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=16)
+# plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=16)
+plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=16)
 
 # #set up heatmap of prediction error paths
 
@@ -304,7 +312,9 @@ handle = plt.plot(t_axis, p_pe_t_by_n[:T_end_PP,realisation_idx], color = 'darko
 
 #set axis labels and save
 plt.xlabel('Time',fontsize=14)
-plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=14)
+# plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=14)
+plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=14)
+
 plt.legend(loc='lower right',fontsize=14)
 
 plt.xticks(fontsize=14)
@@ -319,33 +329,33 @@ if save_mode:
 Figure 6: Plot evolving heatmap of probability density of blanket and internal states over time
 '''
 
-# Run perturbation experiments with way more realizations but shorter time
-T, n_real = 150, 2 * 10**4
+# # Run perturbation experiments with way more realizations but shorter time
+# T, n_real = 150, 2 * 10**4
 
-_, key = random.split(key)
+# _, key = random.split(key)
 
-b = 10. # specify perturbed blanket state 
+# b = 10. # specify perturbed blanket state 
 
-b_init = b * jnp.ones(n_real)
+# b_init = b * jnp.ones(n_real)
 
-#initialising external and internal states at posterior distributions
-mu_init = random.multivariate_normal(key, jnp.array([b_mu*b]), inv(Pi[mu_dim,mu_dim][...,None]), shape = (n_real,) ).squeeze()
-_, key = random.split(key)
-eta_init = random.multivariate_normal(key, jnp.array([b_eta*b]), inv(Pi[eta_dim,eta_dim][...,None]), shape = (n_real,) ).squeeze()
-_, key = random.split(key)
+# #initialising external and internal states at posterior distributions
+# mu_init = random.multivariate_normal(key, jnp.array([b_mu*b]), inv(Pi[mu_dim,mu_dim][...,None]), shape = (n_real,) ).squeeze()
+# _, key = random.split(key)
+# eta_init = random.multivariate_normal(key, jnp.array([b_eta*b]), inv(Pi[eta_dim,eta_dim][...,None]), shape = (n_real,) ).squeeze()
+# _, key = random.split(key)
 
-x0 = jnp.stack( (eta_init, b_init, mu_init), axis = 0)
+# x0 = jnp.stack( (eta_init, b_init, mu_init), axis = 0)
 
-# sample paths
-x = process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
+# # sample paths
+# x = process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
 
-plt.figure(3)
-density_over_time, b_bin_centers, mu_bin_centers = plot_b_mu_evolving_density(x, b_dim, mu_dim, 
-                                    start_T = 0, end_T = T, forward_window = 5,
-                                    plot_average = True, plot_paths = True)
-if save_mode:
-    figure_name = "path_density_3wayOU.png"
-    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
-    plt.close()
+# plt.figure(3)
+# density_over_time, b_bin_centers, mu_bin_centers = plot_b_mu_evolving_density(x, b_dim, mu_dim, 
+#                                     start_T = 0, end_T = T, forward_window = 5,
+#                                     plot_average = True, plot_paths = True)
+# if save_mode:
+#     figure_name = "path_density_3wayOU.png"
+#     plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+#     plt.close()
 
 
