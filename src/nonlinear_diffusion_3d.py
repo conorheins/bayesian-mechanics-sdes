@@ -98,25 +98,32 @@ if save_mode:
 
 # 2D histogram of joint distribution to show x is not a Gaussian process but has Gaussian marginals
 
-
 plt.figure()
 
 # Custom the inside plot: options are: “scatter” | “reg” | “resid” | “kde” | “hex”
 sns.set(style="white", color_codes=True)
-sns.jointplot(x=x_t[t, 0, :], y=x_t[-1, 0, :], kind='hex', space=0, cmap='Blues', color='skyblue')
-plt.xlabel('$x_s$',labelpad=0,fontsize=14)
-plt.ylabel('$x_t$',labelpad=0,fontsize=14)
-plt.text(s='$p(x_{s},x_{t})$', x=1, y=-1, color='black',size='large')
+sns.jointplot(x=x_t[t, b_dim[0], :], y=x_t[-1, b_dim[0], :], kind='hex', space=0, cmap='Blues', color='skyblue')
+plt.xlabel('$b_s$',labelpad=0,fontsize=14)
+plt.ylabel('$b_t$',labelpad=0,fontsize=14)
+plt.text(s='$p(b_{s},b_{t})$', x=1, y=-1, color='black',size='large')
 
 plt.xlim(-3, 3)
 plt.ylim(-3, 3)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.tick_params(axis='both', which='major', pad=-3)
+
+plt.gcf().text(0.15, 0.9, '$p(b_s)$', fontsize=14)
+plt.gcf().text(0.9, 0.6, '$p(b_t)$', fontsize=14)
+
+# plt.subplots_adjust(bottom = 0.2)
 fig = plt.gcf()
-ratio = 1.3
+width_ratio = 1.3
+height_ratio = 1.0
 fig_length = 5
-fig.set_size_inches(ratio * fig_length, fig_length, forward=True)
+fig.set_size_inches(width_ratio * fig_length, height_ratio * fig_length, forward=True)
+
+plt.gcf().tight_layout(rect=[0.0,0.0,1.0,1.0]) 
 
 if save_mode:
     figure_name = "non-Gaussian_diffprocess_3d_diffusion.png"
