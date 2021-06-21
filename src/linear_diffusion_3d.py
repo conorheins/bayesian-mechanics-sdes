@@ -118,7 +118,7 @@ plt.scatter(bin_centers[bin_counts > 1000], eta_cond_b[bin_counts > 1000], s=1, 
 plt.xlabel('Blanket state-space $\mathcal{B}$')
 plt.ylabel('External state-space $\mathcal{E}$')
 # cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
-# plt.title(f'Pearson correlation = {jnp.round(cor, 6)}...')
+# plt.title(f'Pearson correlation = {np.round(cor, 6)}...')
 plt.legend(loc='upper right')
 if save_mode:
     figure_name = "sync_map_3wayOUprocess.png"
@@ -165,19 +165,23 @@ realisation_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # 
 print(f'Sample path index being shown: {realisation_idx}\n')
 
 plt.figure(2)
-plt.title('Free energy $F(b, \mu)$')
+plt.title('Free energy $F(b, \mu)$',fontsize=16)
 plt.contourf(blanket, internal, F_landscape, levels=100, cmap='turbo')  # plotting the free energy landscape
-plt.colorbar()
-plt.ylabel('internal state $ \mu$')
-plt.xlabel('blanket state $b$')
+cb  = plt.colorbar(ticks = np.round(np.arange(0,400,step=50)))
+cb.ax.tick_params(labelsize=14)
+plt.ylabel('internal state $ \mu$',fontsize=14)
+plt.xlabel('blanket state $b$',fontsize=14)
 plt.plot(blanket, b_mu * blanket, c='white')  # plot expected internal state as a function of blanket states
+
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 blanket_trajectory = x[:T_end_fe, b_dim, realisation_idx].squeeze()
 mu_trajectory = x[:T_end_fe, mu_dim, realisation_idx].squeeze()
 
 plot_hot_colourline(blanket_trajectory, mu_trajectory, lw=0.5)
-plt.text(s='$\mathbf{\mu}(b)$', x= x[:T_end_fe, b_dim, :].min()  - 0.7, y= b_mu * (x[:T_end_fe, b_dim, :].min() - 0.7) + 0.2, color='white')
-plt.text(s='$(b_t, \mu_t)$', x=x[1, b_dim, realisation_idx] - 1.2, y=x[1, mu_dim, realisation_idx] + 0.3, color='black')
+plt.text(s='$\mathbf{\mu}(b)$', x= x[:T_end_fe, b_dim, :].min()  - 0.7, y= b_mu * (x[:T_end_fe, b_dim, :].min() - 0.7) + 0.25, color='white', fontsize=16)
+plt.text(s='$(b_t, \mu_t)$', x=x[1, b_dim, realisation_idx] - 1.2, y=x[1, mu_dim, realisation_idx] + 0.35, color='black', fontsize=16)
 
 if save_mode:
     figure_name = "Sample_perturbed_3wayOU.png"
@@ -197,13 +201,16 @@ mean_F = F_over_time.mean(axis=0)
 
 plt.figure(3)
 plt.clf()
-plt.title('Average free energy over time')
+plt.title('Average free energy over time',fontsize=16)
 plot_hot_colourline(np.arange(T_end_fe), mean_F)
 xlabel_pos = int(T_end_fe * 0.4)  # position of text on x axis
-plt.text(s='$F(b_t, \mu_t)$', x=xlabel_pos, y=mean_F[xlabel_pos] + 0.05 * (np.max(mean_F) - mean_F[xlabel_pos]), color='black')
-plt.xlabel('Time')
-plt.ylabel('Free energy $F(b_t, \mu_t)$')
+plt.text(s='$F(b_t, \mu_t)$', x=xlabel_pos, y=mean_F[xlabel_pos] + 0.05 * (np.max(mean_F) - mean_F[xlabel_pos]), color='black', fontsize=16)
+plt.xlabel('Time',fontsize=14)
+plt.ylabel('Free energy $F(b_t, \mu_t)$',fontsize=14)
 plt.xlim(0, T_end_fe)
+
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 if save_mode:
     figure_name = "FE_vs_time_perturbed_3wayOU.png"
@@ -229,20 +236,22 @@ pred_upper_CI_mu0 = posterior_means + conf_interval_param * posterior_cov
 pred_lower_CI_mu0 = posterior_means - conf_interval_param * posterior_cov
 
 t_axis = np.arange(T_end_PP)
-plt.figure(figsize=(8,6))
+# plt.figure(figsize=(8,6))
+plt.figure()
+
 plt.clf()
-plt.title('Predictive processing: $q_{\mu_t}(\eta)$ vs $\eta_t$',fontsize = 20)
+plt.title('Predictive processing: $q_{\mu_t}(\eta)$ vs $\eta_t$',fontsize = 16)
 
 plt.fill_between(t_axis,pred_upper_CI_mu0[0,:], pred_lower_CI_mu0[0,:], color='#4ba2d1', alpha=0.25)
 eta1_real_line = plt.plot(t_axis, eta_samples, lw = 1.25, color = '#d12f13', alpha=1.0, label='External: $\eta_{t}$')
-mu1_mean_line = plt.plot(t_axis,posterior_means, color='#27739c',label='Prediction: $q_{\mu_t}(\eta)$',lw=2.0)
+mu1_mean_line = plt.plot(t_axis,posterior_means, color='#27739c',label='Prediction: $q_{\mu_t}(\eta)$',lw=1.5)
 
 ci_patch_1 = Patch(color='#4ba2d1',alpha=0.2, label=' ')
 
-first_legend = plt.legend(handles=[ci_patch_1], fontsize=20, loc=(0.265,0.121), ncol = 1)
+first_legend = plt.legend(handles=[ci_patch_1], fontsize=14, loc=(0.26,0.152), ncol = 1)
 # Add the legend manually to the current Axes.
 plt.gca().add_artist(first_legend)
-plt.legend(handles=[mu1_mean_line[0], eta1_real_line[0]], loc='lower center', ncol = 1,  fontsize=18)
+plt.legend(handles=[mu1_mean_line[0], eta1_real_line[0]], loc='lower center', ncol = 1,  fontsize=14)
 
 min_value = min( pred_lower_CI_mu0.min(), eta_samples.min() )
 max_value = max( pred_upper_CI_mu0.max(), eta_samples.max() )
@@ -251,11 +260,11 @@ plt.xlim(t_axis[0], t_axis[-1])
 plt.ylim(1.25 * min_value, 1.25 * max_value)
 
 plt.gca().tick_params(axis='both', which='both')
-plt.gca().set_xlabel('Time', fontsize=18)
-plt.gca().set_ylabel('External state-space $\mathcal{E}$', fontsize=18)
+plt.gca().set_xlabel('Time', fontsize=14)
+plt.gca().set_ylabel('External state-space $\mathcal{E}$', fontsize=14)
 
-plt.xticks(fontsize=18)
-plt.yticks(fontsize=18)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 if save_mode:
     figure_name = "average_prediction_3way_OUprocess.png"
@@ -281,7 +290,7 @@ for t in range(T_end_PP):
 # #start figure
 plt.figure()
 plt.clf()
-plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$')
+plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=16)
 
 # #set up heatmap of prediction error paths
 
@@ -294,9 +303,12 @@ plt.contourf(t_axis, bin_centers, freq_pred_error.T, levels=100, cmap='Blues')
 handle = plt.plot(t_axis, p_pe_t_by_n[:T_end_PP,realisation_idx], color = 'darkorange',linewidth=0.8,label='Sample path')
 
 #set axis labels and save
-plt.xlabel('Time')
-plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$')
-plt.legend(loc='lower right')
+plt.xlabel('Time',fontsize=14)
+plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=14)
+plt.legend(loc='lower right',fontsize=14)
+
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
 if save_mode:
     figure_name = "Prediction_errors_time_3wayOU.png"
