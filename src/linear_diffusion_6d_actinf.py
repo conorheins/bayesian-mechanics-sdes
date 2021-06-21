@@ -15,10 +15,12 @@ import matplotlib.cm as cm
 
 from configs.config_6d import initialize_6d_OU
 
-initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
+# initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
 # initialization_key = 20    # this one's good too
 # initialization_key = 25   # in this one, on the way to steady state the trajectory doesn't quite go along the most likely line, but goes parallel to it
 # initialization_key = 26   # lots of solenoidal, kinda avoids the most-likely sensory/active state line
+# initialization_key = 50    # lots of solenoidal, kinda avoids the most-likely sensory/active state line
+initialization_key = 51      # lots of solenoidal, kinda avoids the most-likely sensory/active state line
 
 # fix random seed for reproducibility
 key = random.PRNGKey(initialization_key)   
@@ -104,11 +106,12 @@ print(f'Sample path index being shown: {real_idx}\n')
 
 plt.figure(1)
 plt.clf()
-plt.title('Free energy $F(s,a, \mathbf{\mu})$')
+plt.title('Free energy $F(s,a, \mathbf{\mu})$',fontsize=16)
 plt.contourf(sensory, active, Z, levels=100, cmap='turbo')  # plotting the free energy landscape
-plt.colorbar()
-plt.xlabel('sensory state $s$')
-plt.ylabel('active state $a$')
+cb = plt.colorbar(ticks = np.round(np.arange(0,400,step=50)))
+cb.ax.tick_params(labelsize=14)
+plt.xlabel('sensory state $s$',fontsize=14)
+plt.ylabel('active state $a$',fontsize=14)
 
 bold_a_map = S[a_dim, s_dim] / S[s_dim, s_dim] # most likely active state, given sensory states
 
@@ -116,10 +119,12 @@ bold_a = (bold_a_map * sensory).reshape(len(sensory))  # expected active state
 plt.plot(sensory, bold_a, c='white')  # plot expected internal state as a function of blanket states
 
 plot_hot_colourline(x[:, s_dim, real_idx].squeeze(), x[:, a_dim, real_idx].squeeze(), lw=0.5)
-plt.text(s='$\mathbf{a}(s)$', x=x[:, s_dim, :].min() - 0.7, y=bold_a_map * (x[:, s_dim, :].min() - 0.7) + 0.4,
-         color='white')
-plt.text(s='$(s_t,a_t)$', x=x[1, s_dim, real_idx] - 0.5, y=x[1, a_dim, real_idx] + 0.2, color='black')
+plt.text(s='$\mathbf{a}(s)$', x=x[:, s_dim, :].min()-0.1, y=bold_a_map * (x[:, s_dim, :].min() - 0.7) + 0.5,
+         color='white', fontsize = 16)
+plt.text(s='$(s_t,a_t)$', x=x[1, s_dim, real_idx] - 0.5, y=x[1, a_dim, real_idx] + 0.2, color='black', fontsize=16)
 
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 if save_mode:
     figure_name = "Sample_perturbed_AI_6wayOU.png"
     plt.savefig(os.path.join(seed_folder,figure_name),dpi=100)
@@ -137,13 +142,13 @@ mean_F = F_trajectories.mean(axis=0)
 
 plt.figure(2)
 plt.clf()
-plt.title('Average free energy over time')
+plt.title('Average free energy over time',fontsize=16)
 plot_hot_colourline(np.arange(T), mean_F)
 xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(s_t, a_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (mean_F.max() - mean_F[xlabel]),
-         color='black')
-plt.xlabel('Time')
-plt.ylabel('Free energy $F(s_t, a_t, \mathbf{\mu}_t)$')
+         color='black',fontsize=16)
+plt.xlabel('Time',fontsize=14)
+plt.ylabel('Free energy $F(s_t, a_t, \mathbf{\mu}_t)$',fontsize=14)
 
 if save_mode:
     figure_name = f'FE_vs_time_perturbed_AI_6wayOU.png'
