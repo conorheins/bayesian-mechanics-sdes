@@ -16,8 +16,8 @@ from matplotlib.patches import Patch
 from configs.config_3d import initialize_3d_OU
 
 # initialization_key = 0 # default
-# initialization_key = 1
-initialization_key = 2
+initialization_key = 1
+# initialization_key = 2
 
 
 key = random.PRNGKey(initialization_key)
@@ -77,11 +77,11 @@ _, key = random.split(key)
 # sample paths
 x = process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
 
+b_eta, b_mu, sync = sync_mappings['b_eta'], sync_mappings['b_mu'], sync_mappings['sync']
+
 '''
 Figure 1: sync map OU process
 '''
-
-b_eta, b_mu, sync = sync_mappings['b_eta'], sync_mappings['b_mu'], sync_mappings['sync']
 
 # Compute an empirical histogram of the blanket states
 x_for_histogram = np.array(jnp.transpose(x, (1, 0, 2)).reshape(x.shape[1], x.shape[0]*x.shape[2]).T)
@@ -161,9 +161,9 @@ blanket = jnp.linspace(jnp.min(x[:, b_dim, :]) - 1, jnp.max(x[:, b_dim, :]) + 0.
 
 F_landscape = compute_FE_landscape(blanket, internal, b_eta, sync, S_part_inv, Pi[eta_dim, eta_dim])
 
-realisation_idx = 100  # which sample path to show (between 0 and n_real)
+# realisation_idx = 100  # which sample path to show (between 0 and n_real)
 
-# realisation_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
+realisation_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
 print(f'Sample path index being shown: {realisation_idx}\n')
 
 plt.figure(2)
@@ -227,33 +227,34 @@ T_end_PP = 500
 sample_trajectory = x[:T_end_PP,:,realisation_idx] # choose sample trajectory
 
 eta_samples = sample_trajectory[:,eta_dim].squeeze()
-# mu_samples = sample_trajectory[:,mu_dim].squeeze()
-b_samples = sample_trajectory[:,b_dim].squeeze()
+mu_samples = sample_trajectory[:,mu_dim].squeeze()
+# b_samples = sample_trajectory[:,b_dim].squeeze()
 
-
-# posterior_means = sync @ mu_samples.reshape(1,-1) # predicted external states, given instantaneous internal states -- sigma(mu)
-posterior_means = b_eta @ b_samples.reshape(1,-1) # predicted external states, given instantaneous blanket states -- sigma(boldmu)
+posterior_means = sync @ mu_samples.reshape(1,-1) # predicted external states, given instantaneous internal states -- sigma(mu)
+# posterior_means = b_eta @ b_samples.reshape(1,-1) # predicted external states, given instantaneous blanket states -- sigma(boldmu)
 
 posterior_cov = inv(Pi[eta_dim,eta_dim][...,None])
 
-conf_interval_param = 2.0 
-pred_upper_CI_mu0 = posterior_means + conf_interval_param * posterior_cov
-pred_lower_CI_mu0 = posterior_means - conf_interval_param * posterior_cov
+conf_interval_param = 1.96
+std_mu_0 = jnp.sqrt(posterior_cov)
+pred_upper_CI_mu0 = posterior_means + conf_interval_param * std_mu_0
+pred_lower_CI_mu0 = posterior_means - conf_interval_param * std_mu_0
 
 t_axis = np.arange(T_end_PP)
 plt.figure()
 
 plt.clf()
-# plt.title('Predictive processing: $q_{\mu_t}(\eta)$ vs $\eta_t$',fontsize = 16)
-plt.title('Predictive processing: $q_{\mathbf{\mu_t}}(\eta)$ vs $\eta_t$',fontsize = 16)
+plt.title('Predictive processing: $q_{\mu_t}(\eta)$ vs $\eta_t$',fontsize = 16)
+# plt.title('Predictive processing: $q_{\mathbf{\mu_t}}(\eta)$ vs $\eta_t$',fontsize = 16)
 
 plt.fill_between(t_axis,pred_upper_CI_mu0[0,:], pred_lower_CI_mu0[0,:], color='#4ba2d1', alpha=0.25)
 eta1_real_line = plt.plot(t_axis, eta_samples, lw = 1.25, color = '#d12f13', alpha=1.0, label='External: $\eta_{t}$')
+# mu1_mean_line = plt.plot(t_axis,posterior_means, color='#27739c',label='Prediction: $q_{\mathbf{\mu}_t}(\eta)$',lw=1.5)
 mu1_mean_line = plt.plot(t_axis,posterior_means, color='#27739c',label='Prediction: $q_{\mu_t}(\eta)$',lw=1.5)
 
 ci_patch_1 = Patch(color='#4ba2d1',alpha=0.2, label=' ')
 
-first_legend = plt.legend(handles=[ci_patch_1], fontsize=14, loc=(0.26,0.152), ncol = 1)
+first_legend = plt.legend(handles=[ci_patch_1], fontsize=14, loc=(0.275,0.126), ncol = 1)
 # Add the legend manually to the current Axes.
 plt.gca().add_artist(first_legend)
 plt.legend(handles=[mu1_mean_line[0], eta1_real_line[0]], loc='lower center', ncol = 1,  fontsize=14)
@@ -281,8 +282,8 @@ if save_mode:
 Figure 5 - plot the prediction errors evolving over time
 '''
 
-# predictions = sync * jnp.transpose(x[:,mu_dim,:], (1,0,2)).squeeze()
-predictions = b_eta * jnp.transpose(x[:,b_dim,:], (1,0,2)).squeeze()
+predictions = sync * jnp.transpose(x[:,mu_dim,:], (1,0,2)).squeeze()
+# predictions = b_eta * jnp.transpose(x[:,b_dim,:], (1,0,2)).squeeze()
 
 eta_samples = jnp.transpose(x[:,eta_dim,:], (1,0,2)).squeeze()
 p_pe_t_by_n = Pi[eta_dim, eta_dim] * (eta_samples - predictions) # precision weighted prediction errors (T x n_real)
@@ -297,8 +298,8 @@ for t in range(T_end_PP):
 # #start figure
 plt.figure()
 plt.clf()
-# plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=16)
-plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=16)
+plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=16)
+# plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=16)
 
 # #set up heatmap of prediction error paths
 
@@ -312,8 +313,8 @@ handle = plt.plot(t_axis, p_pe_t_by_n[:T_end_PP,realisation_idx], color = 'darko
 
 #set axis labels and save
 plt.xlabel('Time',fontsize=14)
-# plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=14)
-plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=14)
+plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=14)
+# plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=14)
 
 plt.legend(loc='lower right',fontsize=14)
 
