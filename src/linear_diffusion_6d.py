@@ -103,8 +103,7 @@ Z = compute_Fboldmu_blanket_landscape(sensory, active, b_mu, S_part_inv)
 
 # real_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
 # real_idx = 20  # this will be in the index of the sample path if the `initialization_key` is 4
-real_idx = 25  # this will be in the index of the sample path if the `initialization_key` is 4
-
+real_idx = 25  #  hand-picked realization
 
 print(f'Sample path index being shown: {real_idx}\n')
 
@@ -172,21 +171,23 @@ posterior_means = b_eta.dot(b_path.T) # Lance's addition, now we use sigma(bold_
 posterior_cov = inv(Pi[np.ix_(eta_dim,eta_dim)])
 
 # compute the marginal predictions with confidence intervals overlaid
-conf_interval_param = 2.0
-pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_cov[0,0]
-pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_cov[0,0]
+conf_interval_param = 1.96
 
-pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_cov[1,1]
-pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_cov[1,1]
+std_mu_0 = jnp.sqrt(posterior_cov[0,0])
+pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * std_mu_0
+pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * std_mu_0
+
+std_mu_1 = jnp.sqrt(posterior_cov[1,1])
+pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * std_mu_1
+pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * std_mu_1
 
 t_axis = np.arange(T_end_PP)
-# plt.figure(figsize=(14,10))
 
 plt.clf()
 plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=16, pad = 10)
 
 plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
-eta1_real_line = plt.plot(t_axis, eta_path[:,0], lw = 0.5, color = 'r', alpha=0.6, label='External: $(\eta_{t})_1$')
+eta1_real_line = plt.plot(t_axis, eta_path[:,0], lw = 1.1, color = 'r', alpha=0.6, label='External: $(\eta_{t})_1$')
 mu1_mean_line = plt.plot(t_axis,posterior_means[0], color='b',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_1)$',lw=3.0)
 
 maximum_bottom =  max(posterior_means[0].max(), eta_path[:,0].max()) # find max value of either the prediction or the eta realization(s)
@@ -194,7 +195,7 @@ range_top = max(posterior_means[1].max(), eta_path[:,1].max()) - min(posterior_m
 plot_offset = maximum_bottom + range_top
 
 plt.fill_between(t_axis,pred_upper_CI_mu1 + plot_offset, pred_lower_CI_mu1 + plot_offset, color='#3de3ac', alpha=0.25)
-eta2_real_line = plt.plot(t_axis, eta_path[:,1] + plot_offset, lw = 0.5, color = '#933aab', alpha=0.8, label='External: $(\eta_{t})_2$')
+eta2_real_line = plt.plot(t_axis, eta_path[:,1] + plot_offset, lw = 1.1, color = '#933aab', alpha=0.8, label='External: $(\eta_{t})_2$')
 mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_2)$',lw=3.0)
 
 ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
@@ -207,8 +208,8 @@ total = max_value-min_value
 plt.xlim(t_axis[0], t_axis[-1])
 plt.ylim(min_value - 0.5*total, max_value + 0.1*total)
 
-first_legend = plt.legend(handles=[ci_patch_1], loc=(0.0745,0.142), fontsize=14, ncol = 1)
-second_legend = plt.legend(handles=[ci_patch_2], loc=(0.0745,0.0320), fontsize=14, ncol = 1)
+first_legend = plt.legend(handles=[ci_patch_1], loc=(0.102,0.115), fontsize=14, ncol = 1)
+second_legend = plt.legend(handles=[ci_patch_2], loc=(0.102,0.0318), fontsize=14, ncol = 1)
 
 # Add the legend manually to the current Axes.
 plt.gca().add_artist(first_legend)
@@ -241,19 +242,21 @@ posterior_means = sync.dot(mu_path.T) # my edit to Lance's version, looks better
 posterior_cov = inv(Pi[np.ix_(eta_dim,eta_dim)])
 
 # compute the marginal predictions with confidence intervals overlaid
-conf_interval_param = 2.0
-pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_cov[0,0]
-pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_cov[0,0]
+conf_interval_param = 1.96
+std_mu_0 = jnp.sqrt(posterior_cov[0,0])
+pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * std_mu_0
+pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * std_mu_0
 
-pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_cov[1,1]
-pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_cov[1,1]
+std_mu_1 = jnp.sqrt(posterior_cov[1,1])
+pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * std_mu_1
+pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * std_mu_1
 
 t_axis = np.arange(T_end_PP)
 plt.clf()
 plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsize=16, pad = 10)
 
 plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
-eta1_real_line = plt.plot(t_axis, eta_path[:,0], lw = 0.5, color = 'r', alpha=0.6, label='External: $(\eta_{t})_1$')
+eta1_real_line = plt.plot(t_axis, eta_path[:,0], lw = 1.1, color = 'r', alpha=0.6, label='External: $(\eta_{t})_1$')
 mu1_mean_line = plt.plot(t_axis,posterior_means[0], color='b',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_1)$',lw=3.0)
 
 maximum_bottom =  max(posterior_means[0].max(), eta_path[:,0].max()) # find max value of either the prediction or the eta realization(s)
@@ -261,7 +264,7 @@ range_top = max(posterior_means[1].max(), eta_path[:,1].max()) - min(posterior_m
 plot_offset = maximum_bottom + range_top
 
 plt.fill_between(t_axis,pred_upper_CI_mu1 + plot_offset, pred_lower_CI_mu1 + plot_offset, color='#3de3ac', alpha=0.25)
-eta2_real_line = plt.plot(t_axis, eta_path[:,1] + plot_offset, lw = 0.5, color = '#933aab', alpha=0.8, label='External: $(\eta_{t})_2$')
+eta2_real_line = plt.plot(t_axis, eta_path[:,1] + plot_offset, lw = 1.1, color = '#933aab', alpha=0.8, label='External: $(\eta_{t})_2$')
 mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_2)$',lw=3.0)
 
 ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
@@ -308,12 +311,14 @@ posterior_means = sync.dot(mean_trajectory[:T_end_PP,mu_dim].T)
 posterior_cov = inv(Pi[np.ix_(eta_dim,eta_dim)])
 
 # compute the marginal predictions with confidence intervals overlaid
-conf_interval_param = 2.0
-pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * posterior_cov[0,0]
-pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * posterior_cov[0,0]
+conf_interval_param = 1.96
+std_mu_0 = jnp.sqrt(posterior_cov[0,0])
+pred_upper_CI_mu0 = posterior_means[0]+ conf_interval_param * std_mu_0
+pred_lower_CI_mu0 = posterior_means[0]- conf_interval_param * std_mu_0
 
-pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * posterior_cov[1,1]
-pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * posterior_cov[1,1]
+std_mu_1 = jnp.sqrt(posterior_cov[0,0])
+pred_upper_CI_mu1 = posterior_means[1] + conf_interval_param * std_mu_1
+pred_lower_CI_mu1 = posterior_means[1] - conf_interval_param * std_mu_1
 
 t_axis = np.arange(T_end_PP)
 plt.clf()
@@ -322,7 +327,7 @@ plt.title('Predictive processing: $q_{\mathbf{\mu}_t}(\eta)$ vs $\eta_t$',fontsi
 show_every = 5
 
 plt.fill_between(t_axis,pred_upper_CI_mu0, pred_lower_CI_mu0, color='b', alpha=0.15)
-eta1_real_line = plt.plot(t_axis, eta_paths[:,0,::show_every], lw = 0.5, color = 'r', alpha=0.35, label='External: $(\eta_{t})_1$')
+eta1_real_line = plt.plot(t_axis, eta_paths[:,0,::show_every], lw = 1.1, color = 'r', alpha=0.35, label='External: $(\eta_{t})_1$')
 mu1_mean_line = plt.plot(t_axis,posterior_means[0], color='b',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_1)$',lw=3.0)
 
 maximum_bottom =  max(posterior_means[0].max(), eta_paths[:,0,::show_every].max())
@@ -330,7 +335,7 @@ range_top = max(posterior_means[1].max(), eta_paths[:,1,::show_every].max()) - m
 plot_offset = maximum_bottom + range_top
 
 plt.fill_between(t_axis,pred_upper_CI_mu1 + plot_offset, pred_lower_CI_mu1 + plot_offset, color='#3de3ac', alpha=0.25)
-eta2_real_line = plt.plot(t_axis, eta_paths[:,1,::show_every] + plot_offset, lw = 0.5, color = '#933aab', alpha=0.35, label='External: $(\eta_{t})_2$')
+eta2_real_line = plt.plot(t_axis, eta_paths[:,1,::show_every] + plot_offset, lw = 1.1, color = '#933aab', alpha=0.35, label='External: $(\eta_{t})_2$')
 mu2_mean_line = plt.plot(t_axis,posterior_means[1] + plot_offset, color='#3aab89',label='Prediction: $q_{\mathbf{\mu}_t}(\eta_2)$',lw=3.0)
 
 ci_patch_1 = Patch(color='blue',alpha=0.1, label=' ')
