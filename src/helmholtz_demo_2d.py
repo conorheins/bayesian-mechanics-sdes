@@ -98,7 +98,7 @@ plt.xlabel('$x_1$',fontsize=14)
 plt.ylabel('$x_2$',fontsize=14)
 
 plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
-# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 if save_mode:
     figure_name = "Helmholtz_complete.png"
@@ -118,54 +118,57 @@ if save_mode:
 Conservative simulation
 '''
 
-# B_conservative = flow_parameters['Q'] @ stationary_stats['Pi']  # drift matrix
+B_conservative = flow_parameters['Q'] @ stationary_stats['Pi']  # drift matrix
 
-# # Setting up the OU process
-# conservative_process = LinearProcess(dim=n_var, friction=B_conservative, volatility= jnp.zeros((n_var, n_var)))  # create process
+# Setting up the OU process
+conservative_process = LinearProcess(dim=n_var, friction=B_conservative, volatility= jnp.zeros((n_var, n_var)))  # create process
 
-# n_real = 50
-# x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), S, shape = (n_real,) ), (1, 0))
-# _, key = random.split(key)
+n_real = 50
+x0 = jnp.transpose(random.multivariate_normal(key, jnp.zeros(n_var), S, shape = (n_real,) ), (1, 0))
 
-# x = conservative_process.integrate(int(2.5*T), n_real, dt, x0, rng_key = key) # run simulation
+_, key = random.split(key)
 
-# real_idx_conservative = 2  # which sample path to show (between 0 and n_real)
-# print(f'Sample path index being shown: {real_idx}\n')
+x = conservative_process.integrate(int(2.5*T), n_real, dt, x0, rng_key = key) # run simulation
+
+# real_idx_conservative = 2  # this one is on a slightly further-out isocontour
+real_idx_conservative = 19  # this is my favorite isocontour personally (not too far, not too close)
+
+print(f'Sample path index being shown: {real_idx_conservative}\n')
 
 '''
 Plot trajectory conservative simulation
 '''
 
-# lim_x = 2.0
-# lim_y = 1.5
+lim_x = 2.0
+lim_y = 1.6
 
-# x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
-# y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
+x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
+y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
 
-# X,Y = np.meshgrid(x_tick,y_tick)
-# pos = np.dstack((X, Y))
+X,Y = np.meshgrid(x_tick,y_tick)
+pos = np.dstack((X, Y))
 
-# rv = multivariate_normal(cov= S) #random normal
+rv = multivariate_normal(cov= S) #random normal
 
-# plt.figure(4)
-# plt.clf()
-# plt.title('')
-# plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
-# plt.suptitle('Time-irreversible',fontsize=16)
-# plt.title(r'$dx_t = b_{irrev}(x_t)dt$',fontsize=14)
-# plot_hot_colourline(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
-# # plt.plot(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+plt.figure(4)
+plt.clf()
+plt.title('')
+plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
+plt.suptitle('Time-irreversible',fontsize=16)
+plt.title(r'$dx_t = b_{irrev}(x_t)dt$',fontsize=14)
+plot_hot_colourline(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
+# plt.plot(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
-# plt.xticks(fontsize=14)
-# plt.yticks(fontsize=14)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
-# plt.xlabel('$x_1$',fontsize=14)
-# plt.ylabel('$x_2$',fontsize=14)
+plt.xlabel('$x_1$',fontsize=14)
+plt.ylabel('$x_2$',fontsize=14)
 
-# if save_mode:
-#     figure_name = "Helmholtz_conservative.png"
-#     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
-#     plt.close()
+if save_mode:
+    figure_name = "Helmholtz_conservative.png"
+    plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
+    plt.close()
 
 # # plt.figure(5)
 # # plt.clf()
@@ -179,51 +182,52 @@ Plot trajectory conservative simulation
 Dissipative simulation
 '''
 
-# B_dissipative = flow_parameters['D'] @ stationary_stats['Pi']  # drift matrix
+B_dissipative = flow_parameters['D'] @ stationary_stats['Pi']  # drift matrix
 
-# # Setting up the OU process
-# dissipative_process = LinearProcess(dim=n_var, friction=B_dissipative, volatility=flow_parameters['sigma'])  # create process
+# Setting up the OU process
+dissipative_process = LinearProcess(dim=n_var, friction=B_dissipative, volatility=flow_parameters['sigma'])  # create process
 
-# _, key = random.split(key)
-# x = dissipative_process.integrate(T, n_real, dt, x0, rng_key = key) # run simulation
+x0 = jnp.zeros( (2, n_real) ) + 0.2
+_, key = random.split(key)
+x = dissipative_process.integrate(int(1.2 * T), n_real, dt, x0, rng_key = key) # run simulation
 
 '''
 Plot trajectory dissipative simulation
 '''
 
-# lim_x = 2.0
-# lim_y = 1.5
+lim_x = 2.0
+lim_y = 1.6
 
-# x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
-# y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
+x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
+y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
 
-# X,Y = np.meshgrid(x_tick,y_tick)
-# pos = np.dstack((X, Y))
+X,Y = np.meshgrid(x_tick,y_tick)
+pos = np.dstack((X, Y))
 
-# rv = multivariate_normal(cov= S) #random normal
+rv = multivariate_normal(cov= S) #random normal
 
+real_idx_dissipative = 6
+print(f'Sample path index being shown: {real_idx_dissipative}\n')
 
-# real_idx_dissipative = 5
+plt.figure(6)
+plt.clf()
+plt.title('')
+plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
+plt.suptitle('Time-reversible',fontsize=16)
+plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$',fontsize=14)
+plot_hot_colourline(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
+plt.plot(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # this runs faster due to same color for every point
 
-# plt.figure(6)
-# plt.clf()
-# plt.title('')
-# plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
-# plt.suptitle('Time-reversible',fontsize=16)
-# plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$',fontsize=14)
-# plot_hot_colourline(x[:, 0, real_idx_dissipative].reshape(T), x[:, 1, real_idx_dissipative].reshape(T), lw=0.5) # warning: this runs slow for long trajectories
-# # plt.plot(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # this runs faster due to same color for every point
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
-# plt.xticks(fontsize=14)
-# plt.yticks(fontsize=14)
+plt.xlabel('$x_1$',fontsize=14)
+plt.ylabel('$x_2$',fontsize=14)
 
-# plt.xlabel('$x_1$',fontsize=14)
-# plt.ylabel('$x_2$',fontsize=14)
-
-# if save_mode:
-#     figure_name = "Helmholtz_dissipative.png"
-#     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
-#     plt.close()
+if save_mode:
+    figure_name = "Helmholtz_dissipative.png"
+    plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
+    plt.close()
 
 
 # plt.figure(7)
@@ -238,33 +242,33 @@ Plot trajectory dissipative simulation
 Plot steady-state density
 '''
 
-# rv_eye = multivariate_normal(cov= np.eye(n_var)) #random normal
+rv_eye = multivariate_normal(cov= np.eye(n_var)) #random normal
 
-# lim_x = 2.5
-# lim_y = 2.5
+lim_x = 2.5
+lim_y = 2.5
 
-# x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
-# y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
+x_tick = np.linspace(-lim_x, lim_x, 105)  # x axis points
+y_tick = np.linspace(-lim_y, lim_y, 100)  # y axis points
 
-# X,Y = np.meshgrid(x_tick,y_tick)
-# pos = np.dstack((X, Y))
+X,Y = np.meshgrid(x_tick,y_tick)
+pos = np.dstack((X, Y))
 
-# plt.figure(8)
-# plt.clf()
-# ax = plt.axes(projection='3d')
-# ax.plot_surface(X, Y, rv_eye.pdf(pos), rstride=1, cstride=1,cmap='Blues', edgecolor='none')
-# ax.grid(False)
-# ax.set_zlim(0,1.5* rv_eye.pdf(pos).max() )
-# ax.elev +=-15
-# ax.axis('off')
-# ratio = 1.3
-# len = 8
-# ax.figure.set_size_inches(ratio * len, len, forward=True)
+plt.figure(8)
+plt.clf()
+ax = plt.axes(projection='3d')
+ax.plot_surface(X, Y, rv_eye.pdf(pos), rstride=1, cstride=1,cmap='Blues', edgecolor='none')
+ax.grid(False)
+ax.set_zlim(0,1.5* rv_eye.pdf(pos).max() )
+ax.elev +=-15
+ax.axis('off')
+ratio = 1.3
+len = 8
+ax.figure.set_size_inches(ratio * len, len, forward=True)
 
-# if save_mode:
-#     figure_name = "3Dplot_Gaussian_density.png"
-#     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
-#     plt.close()
+if save_mode:
+    figure_name = "3Dplot_Gaussian_density.png"
+    plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
+    plt.close()
 
 
 
