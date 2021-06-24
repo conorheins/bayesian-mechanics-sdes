@@ -1,18 +1,30 @@
 '''
-Simulations synchroinsation map (non-example)
+Simulations synchronisation map (non-example)
 '''
-
-
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-#plt.rc('text', usetex=True)
-#plt.rc('text.latex', preamble=r'\usepackage{bm}')
-#plt.rc('text', usetex=True)
-#plt.rcParams['text.latex.preamble']=[r"\usepackage{amsmath}"]
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}     # setup matplotlib to use latex for output      # change this if using xetex or lautex
 plt.style.use('seaborn-white')
 from scipy import stats
+
+save_mode = True
+random_seed = 1
+np.random.seed(random_seed)
+
+if save_mode:
+    figures_folder = 'figures'
+    if not os.path.isdir(figures_folder):
+        os.mkdir(figures_folder)
+    
+    figures_folder = os.path.join(figures_folder, 'sync_map_non_example')
+    if not os.path.isdir(figures_folder):
+        os.mkdir(figures_folder)
+
+    seed_folder = os.path.join(figures_folder, f'seed_{random_seed}')
+    if not os.path.isdir(seed_folder):
+        os.mkdir(seed_folder)
 
 '''
 Setup
@@ -42,13 +54,11 @@ if np.any(np.linalg.eigvals(Pi) <= 0):
 # We compute the stationary covariance
 S= np.linalg.inv(Pi)
 
-
-
 # define the linear synchronisation map
 #mu = S[di, db] * S[db, db] ** (-1)  # expected internal state
 #eta = S[de, db] * S[db, db] ** (-1)  # expected external state
 sync = 0 # sync map
-#sync = S[de, db] * S[di, db] ** (-1)  # sync map
+# sync = S[de, db] * S[di, db] ** (-1)  # sync map
 
 
 '''
@@ -87,17 +97,32 @@ for i in range(len(bins)):
 
 plt.figure(2)
 plt.clf()
-#plt.suptitle('Synchronisation map')
-plt.scatter(bins[j == 1], sync_bold_mu[j == 1], s=1, alpha=0.5,
+
+show_every = 5 # can downsample the number of points shown, in order to de-clutter the plot
+
+bins_to_show = bins[j==1][::show_every]
+sync_boldmu_to_show = sync_bold_mu[j == 1][::show_every]
+bold_eta_emp_to_show = bold_eta_empirical[j == 1][::show_every]
+
+plt.scatter(bins_to_show, sync_boldmu_to_show, s=10, alpha=0.5,
             label='Prediction: $\sigma(\mathbf{\mu}(b))$')  # scatter plot theoretical expected internal state
-plt.scatter(bins[j == 1], bold_eta_empirical[j == 1], s=1, alpha=0.5,
+plt.scatter(bins_to_show, bold_eta_emp_to_show, s=10, alpha=0.5,
             label='External: $\mathbf{\eta}(b)$')  # scatter plot empirical external internal state
-plt.xlabel('Blanket state-space $\mathcal{B}$')
-plt.ylabel('External state-space $\mathcal{E}$')
-plt.legend(loc='upper right')
+plt.xlabel('Blanket state-space $\mathcal{B}$',fontsize=14)
+plt.ylabel('External state-space $\mathcal{E}$',fontsize=14)
+plt.legend(loc='upper right', fontsize=16)
 cor = stats.pearsonr(sync_bold_mu[j == 1], bold_eta_empirical[j == 1])
-plt.title(f'Pearson correlation = {np.round(cor[0],6)}')
-plt.savefig("Prediction_sync_map_non-example.png", dpi=100)
 
+if np.isnan(cor[0]):
+    plt.title('Pearson correlation: not defined', fontsize=16)
+else:
+    plt.title(f'Pearson correlation = {np.round(cor[0],6)}', fontsize=16)
 
+plt.autoscale(enable=True, axis='x', tight=True)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 
+if save_mode:
+    figure_name = "Prediction_sync_map_non_example.png"
+    plt.savefig(os.path.join(seed_folder,figure_name), dpi=100)
+    plt.close()
