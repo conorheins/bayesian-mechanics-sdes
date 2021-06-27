@@ -8,7 +8,7 @@ To run the code in this repo, we recommend creating a conda environment using th
 contains all the required dependencies (see below):
 
 ```
-conda create -f environment.yml
+conda env create -f environment.yml
 ```
 
 Once you create the repository, you can activate it using:
