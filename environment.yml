@@ -44,7 +44,7 @@ dependencies:
   - pillow=8.2.0=py38h83525de_1
   - pip=21.1.2=pyhd8ed1ab_0
   - pyparsing=2.4.7=pyh9f0ad1d_0
-  - python=3.8.10=h3a889e0_1_cpython
+  - python=3.8.10
   - python-dateutil=2.8.1=py_0
   - python-flatbuffers=2.0=pyhd8ed1ab_0
   - python_abi=3.8=1_cp38
