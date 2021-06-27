@@ -123,7 +123,7 @@ def animate(i):
     axes[1].legend(fontsize=30,loc='upper right')
 
 anim = animation.FuncAnimation(fig, animate, frames = T, interval = 1, blit = False)
-plt.show()
+# plt.show()
 
 figures_folder = 'figures'
 if not os.path.isdir(figures_folder):
