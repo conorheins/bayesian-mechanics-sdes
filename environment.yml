@@ -4,16 +4,27 @@ channels:
   - defaults
 dependencies:
   - absl-py=0.12.0=pyhd8ed1ab_0
+  - appnope=0.1.2=py38h50d1736_1
   - autograd=1.3=py_0
-  - ca-certificates=2020.12.5=h033912b_0
-  - certifi=2020.12.5=py38h50d1736_1
+  - backcall=0.2.0=pyh9f0ad1d_0
+  - backports=1.0=py_2
+  - backports.functools_lru_cache=1.6.4=pyhd8ed1ab_0
+  - ca-certificates=2021.5.30=h033912b_0
+  - certifi=2021.5.30=py38h50d1736_0
   - cycler=0.10.0=py_2
+  - decorator=5.0.9=pyhd8ed1ab_0
   - freetype=2.10.4=h4cff582_1
   - future=0.18.2=py38h50d1736_3
+  - ipykernel=5.5.5=py38h6c79ece_0
+  - ipython=7.25.0=py38h6c79ece_0
+  - ipython_genutils=0.2.0=py_1
   - jax=0.2.13=pyhd8ed1ab_0
   - jaxlib=0.1.67=py38h50d1736_0
   - jbig=2.1=h0d85af4_2003
+  - jedi=0.18.0=py38h50d1736_2
   - jpeg=9d=hbcb3906_0
+  - jupyter_client=6.1.12=pyhd8ed1ab_0
+  - jupyter_core=4.7.1=py38h50d1736_0
   - kiwisolver=1.3.1=py38hd9c93a9_1
   - lcms2=2.12=h577c468_0
   - lerc=2.2.1=h046ec9c_0
@@ -27,12 +38,14 @@ dependencies:
   - liblapack=3.9.0=9_openblas
   - libopenblas=0.3.15=openmp_h5e1b9a4_1
   - libpng=1.6.37=h7cec526_2
+  - libsodium=1.0.18=hbcb3906_1
   - libtiff=4.3.0=h1167814_1
   - libwebp-base=1.2.0=h0d85af4_2
   - llvm-openmp=11.1.0=hda6cdc1_1
   - lz4-c=1.9.3=h046ec9c_0
   - matplotlib=3.4.2=py38h50d1736_0
   - matplotlib-base=3.4.2=py38h6152e83_0
+  - matplotlib-inline=0.1.2=pyhd8ed1ab_2
   - ncurses=6.2=h2e338ed_4
   - numpy=1.20.3=py38had91d27_1
   - olefile=0.46=pyh9f0ad1d_1
@@ -40,15 +53,22 @@ dependencies:
   - openssl=1.1.1k=h0d85af4_0
   - opt_einsum=3.3.0=pyhd8ed1ab_1
   - pandas=1.2.4=py38h1f261ad_0
+  - parso=0.8.2=pyhd8ed1ab_0
   - patsy=0.5.1=py_0
+  - pexpect=4.8.0=pyh9f0ad1d_2
+  - pickleshare=0.7.5=py_1003
   - pillow=8.2.0=py38h83525de_1
   - pip=21.1.2=pyhd8ed1ab_0
+  - prompt-toolkit=3.0.19=pyha770c72_0
+  - ptyprocess=0.7.0=pyhd3deb0d_0
+  - pygments=2.9.0=pyhd8ed1ab_0
   - pyparsing=2.4.7=pyh9f0ad1d_0
-  - python=3.8.10
+  - python=3.8.10=h0e5c897_0_cpython
   - python-dateutil=2.8.1=py_0
   - python-flatbuffers=2.0=pyhd8ed1ab_0
   - python_abi=3.8=1_cp38
   - pytz=2021.1=pyhd8ed1ab_0
+  - pyzmq=22.1.0=py38hd3b92b6_0
   - readline=8.1=h05e3726_0
   - scipy=1.6.3=py38h431c0a8_0
   - seaborn=0.11.1=hd8ed1ab_1
@@ -59,8 +79,10 @@ dependencies:
   - statsmodels=0.12.2=py38ha1b04c9_0
   - tk=8.6.10=h0419947_1
   - tornado=6.1=py38h5406a74_1
+  - traitlets=5.0.5=py_0
+  - wcwidth=0.2.5=pyh9f0ad1d_2
   - wheel=0.36.2=pyhd3deb0d_0
   - xz=5.2.5=haf1e3a3_1
+  - zeromq=4.3.4=h1c7c35f_0
   - zlib=1.2.11=h7795811_1010
   - zstd=1.5.0=h582d3a0_0
-prefix: /Users/conor/opt/anaconda3/envs/bayesmech_statproc
