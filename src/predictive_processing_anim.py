@@ -1,7 +1,6 @@
 import os
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from matplotlib.collections import LineCollection
 import matplotlib.cm as cm
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 

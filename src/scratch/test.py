@@ -83,6 +83,14 @@ plt.xlabel('x axis')
 plt.ylabel('y axis')
 
 
+# %%
+
+# my favorite colormaps
+# colormap2use = plt.cm.get_cmap('GnBu')
+# colormap2use = plt.cm.get_cmap('YlGnBu')
+# colormap2use = plt.cm.get_cmap('YlGnBu_r')
+# colormap2use = plt.cm.get_cmap('GnBu_r')
+# colormap2use = plt.cm.get_cmap('PuBu_r')
 
 # %% OLD STUFF
 
