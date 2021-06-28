@@ -8,8 +8,8 @@
 # Bayesian mechanics for stationary processes
 
 Companion repository for Bayesian mechanics for stationary processes (2021) by Lancelot Da Costa, Karl Friston, Conor Heins, and Grigorios A. Pavliotis.
+[[Paper]](https://arxiv.org/submit/3811135)
 
-[Paper](https://arxiv.org/submit/3811135)
 
 # Installation 
 
