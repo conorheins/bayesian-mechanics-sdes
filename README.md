@@ -2,7 +2,7 @@
  -->
  
 <p align="center">
-  <img src="https://github.com/conorheins/bayesian-mechanics-sdes/blob/repo_reorganization/just_fe_contour.gif" width="50%" height="50%"/>
+  <img src=https://github.com/conorheins/bayesian-mechanics-sdes/blob/main/just_fe_contour.gif" width="50%" height="50%"/>
 </p>
 
 # Bayesian mechanics for stationary processes
