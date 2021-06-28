@@ -3,8 +3,9 @@ Illustration Helmholtz decomposition of a 2-D OU process
 '''
 
 import os
+import sys
 from diffusions import LinearProcess
-from utilities import plot_hot_colourline
+from utilities import plot_hot_colourline, parse_command_line
 
 import jax.numpy as jnp
 from jax import random
@@ -15,13 +16,7 @@ import matplotlib.pyplot as plt
 
 from configs.config_2d import initialize_2d_OU
 
-# initialization_key = 50    # default configuration in `config_2d.py` file if no key is passed
-# initialization_key = 45    # another config
-initialization_key = 22      # good one
-
-key = random.PRNGKey(initialization_key)   
-
-save_mode = True
+key, save_mode = parse_command_line(default_key = 22)
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
@@ -34,7 +29,7 @@ figures_folder = os.path.join(figures_folder, '2d_HH_demo')
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
 
-seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+seed_folder = os.path.join(figures_folder, f'seed_{key[1]}')
 if not os.path.isdir(seed_folder):
     os.mkdir(seed_folder)
 
@@ -97,21 +92,13 @@ plt.yticks(fontsize=14)
 plt.xlabel('$x_1$',fontsize=14)
 plt.ylabel('$x_2$',fontsize=14)
 
-plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
+# plot_hot_colourline(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
 plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 if save_mode:
     figure_name = "Helmholtz_complete.png"
     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
     plt.close()
-
-# plt.figure(3)
-# plt.clf()
-# plt.plot(range(T), x[:, 0, real_idx].squeeze())
-# plt.plot(range(T), x[:, 1, real_idx].squeeze())
-# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze())
-# plt.close()
-
 
 
 '''
@@ -130,7 +117,6 @@ _, key = random.split(key)
 
 x = conservative_process.integrate(int(2.5*T), n_real, dt, x0, rng_key = key) # run simulation
 
-# real_idx_conservative = 2  # this one is on a slightly further-out isocontour
 real_idx_conservative = 19  # this is my favorite isocontour personally (not too far, not too close)
 
 print(f'Sample path index being shown: {real_idx_conservative}\n')
@@ -156,8 +142,8 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-irreversible',fontsize=16)
 plt.title(r'$dx_t = b_{irrev}(x_t)dt$',fontsize=14)
-plot_hot_colourline(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
-# plt.plot(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
+# plot_hot_colourline(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
+plt.plot(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
@@ -169,13 +155,6 @@ if save_mode:
     figure_name = "Helmholtz_conservative.png"
     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
     plt.close()
-
-# # plt.figure(5)
-# # plt.clf()
-# # plt.plot(range(T), x[:, 0, real_idx].squeeze())
-# # plt.plot(range(T), x[:, 1, real_idx].squeeze())
-# # plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze())
-# # plt.close()
 
 
 '''
@@ -215,7 +194,7 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-reversible',fontsize=16)
 plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$',fontsize=14)
-plot_hot_colourline(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
+# plot_hot_colourline(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
 plt.plot(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # this runs faster due to same color for every point
 
 plt.xticks(fontsize=14)
@@ -229,13 +208,6 @@ if save_mode:
     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
     plt.close()
 
-
-# plt.figure(7)
-# plt.clf()
-# plt.plot(range(T), x[0, :, n].reshape(T))
-# plt.plot(range(T), x[1, :, n].reshape(T))
-# plt.plot(x[:, 0, real_idx].squeeze(), x[:, 1, real_idx].squeeze())
-# plt.close()
 
 
 '''

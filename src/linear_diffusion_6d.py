@@ -1,6 +1,7 @@
 import os
 from diffusions import LinearProcess
-from utilities import compute_Fboldmu_blanket_landscape, compute_Fboldmu_blanket_over_time, plot_hot_colourline, eigsorted
+from utilities import parse_command_line
+from utilities import compute_Fboldmu_blanket_landscape, compute_Fboldmu_blanket_over_time, plot_hot_colourline
 import jax.numpy as jnp
 from jax.numpy.linalg import inv
 from jax import random
@@ -15,21 +16,16 @@ import matplotlib.cm as cm
 
 from configs.config_6d import initialize_6d_OU
 
-# initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
+key, save_mode = parse_command_line(default_key=4) # chosen seed, some solenoidal flow but not too much
 
 # other interesting seeds (that I know work - by which I mean the initialization conditions don't break due to inequality of Sylvester relation)
-# initialization_key = 16   
-# initialization_key = 14   
-# initialization_key = 13   
-# initialization_key = 11   
-initialization_key = 4  # decent one, some solenoidal flow but not too much
-# initialization_key = 3  # decent one
 # initialization_key = 2  # not too much solenoidal, nearly straight descent to VFE minimum
-
-# fix random seed for reproducibility
-key = random.PRNGKey(initialization_key)   
-
-save_mode = True
+# initialization_key = 3  
+# initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
+# initialization_key = 11   
+# initialization_key = 13   
+# initialization_key = 14   
+# initialization_key = 16   
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
@@ -42,7 +38,7 @@ figures_folder = os.path.join(figures_folder, '6d_inference')
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
 
-seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+seed_folder = os.path.join(figures_folder, f'seed_{key[1]}')
 if not os.path.isdir(seed_folder):
     os.mkdir(seed_folder)
 
@@ -102,7 +98,6 @@ active = jnp.linspace(jnp.min(x[:, a_dim, :]) - 1, jnp.max(x[:, a_dim, :]) + 0.5
 Z = compute_Fboldmu_blanket_landscape(sensory, active, b_mu, S_part_inv)
 
 # real_idx = random.randint(key, shape=(), minval = 0, maxval = n_real)  # which sample path to show (between 0 and n_real)
-# real_idx = 20  # this will be in the index of the sample path if the `initialization_key` is 4
 real_idx = 25  #  hand-picked realization
 
 print(f'Sample path index being shown: {real_idx}\n')
@@ -134,7 +129,6 @@ blanket_hist = jnp.transpose(x[:,b_dim,:], (1, 0, 2))
 F_trajectories = compute_Fboldmu_blanket_over_time(blanket_hist, b_mu, S_part_inv)
 mean_F = F_trajectories.mean(axis=0)
 
-# plt.figure(figsize=(14,10))
 plt.figure(2)
 plt.clf()
 plt.title('Average free energy over time',fontsize=16)
@@ -145,7 +139,6 @@ plt.text(s='$F(b_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (mean
 plt.xlabel('Time',fontsize=14)
 plt.ylabel('Free energy $F(b_t, \mathbf{\mu}_t)$',fontsize=14)
 
-# plt.autoscale(enable=True, axis='x', tight=True)
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 
@@ -419,15 +412,11 @@ ci_patch = Patch(color='blue',alpha=0.4, label='Covariance at steady-state')
 
 #plotting of figure elements
 
-
 plt.legend(handles=[dots, ci_patch], loc='lower right',fontsize=14)
 legend = plt.gca().get_legend()
 legend.legendHandles[0].set_color(cm.hot(0.01))
 
 plt.gca().tick_params(axis='both', which='both', labelsize=14)
-
-# plt.gca().set_xlabel('$\mathbf{\epsilon}_1$',fontsize=30)
-# plt.gca().set_ylabel('$\mathbf{\epsilon}_2$',fontsize=30)
 
 plt.gca().set_xlabel(r'$\xi_1$',fontsize=14)
 plt.gca().set_ylabel(r'$\xi_2$',fontsize=14)

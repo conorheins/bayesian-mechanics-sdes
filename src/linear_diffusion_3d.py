@@ -1,7 +1,7 @@
 import os
 from diffusions import LinearProcess
-from utilities import initialize_random_friction_numpy, compute_FE_landscape, compute_F_over_time
-from utilities import plot_hot_colourline, compute_FE_landscape, compute_F_over_time, plot_b_mu_evolving_density
+from utilities import plot_hot_colourline, parse_command_line
+from utilities import compute_FE_landscape, compute_F_over_time, plot_b_mu_evolving_density
 
 import jax.numpy as jnp
 from jax.numpy.linalg import inv
@@ -12,17 +12,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Patch
 
+from scipy import stats
+
 # import the 3way configuration variables 
 from configs.config_3d import initialize_3d_OU
 
-# initialization_key = 0 # default
-initialization_key = 1
-# initialization_key = 2
-
-
-key = random.PRNGKey(initialization_key)
-
-save_mode = True
+key, save_mode = parse_command_line(default_key = 1)
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
@@ -36,10 +31,9 @@ if save_mode:
     if not os.path.isdir(figures_folder):
         os.mkdir(figures_folder)
 
-    seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+    seed_folder = os.path.join(figures_folder, f'seed_{key[1]}')
     if not os.path.isdir(seed_folder):
         os.mkdir(seed_folder)
-
 
 '''
 Setting up the steady-state
@@ -117,8 +111,8 @@ plt.scatter(bin_centers[bin_counts > 1000], sync_boldmu[bin_counts > 1000], s=1,
 plt.scatter(bin_centers[bin_counts > 1000], eta_cond_b[bin_counts > 1000], s=1, alpha=0.5, label='External: $\mathbf{\eta}(b_t)$')
 plt.xlabel('Blanket state-space $\mathcal{B}$')
 plt.ylabel('External state-space $\mathcal{E}$')
-# cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
-# plt.title(f'Pearson correlation = {np.round(cor, 6)}...')
+cor = stats.pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
+plt.title(f'Pearson correlation = {np.round(cor, 6)}...')
 plt.legend(loc='upper right')
 if save_mode:
     figure_name = "sync_map_3wayOUprocess.png"
@@ -299,7 +293,6 @@ for t in range(T_end_PP):
 plt.figure()
 plt.clf()
 plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=16)
-# plt.title('Precision weighted prediction errors $\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=16)
 
 # #set up heatmap of prediction error paths
 
@@ -314,7 +307,6 @@ handle = plt.plot(t_axis, p_pe_t_by_n[:T_end_PP,realisation_idx], color = 'darko
 #set axis labels and save
 plt.xlabel('Time',fontsize=14)
 plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mu_t))$',fontsize=14)
-# plt.ylabel('$\mathbf{\Pi}_{\eta}(\eta_t - \sigma(\mathbf{\mu}_t))$',fontsize=14)
 
 plt.legend(loc='lower right',fontsize=14)
 
