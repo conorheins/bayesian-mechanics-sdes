@@ -1,6 +1,7 @@
 import os
 from diffusions import LinearProcess
-from utilities import compute_Fboldmu_blanket_landscape, compute_Fboldmu_blanket_over_time, plot_hot_colourline, eigsorted
+from utilities import parse_command_line
+from utilities import compute_Fboldmu_blanket_landscape, compute_Fboldmu_blanket_over_time, plot_hot_colourline
 import jax.numpy as jnp
 from jax.numpy.linalg import inv
 from jax import random
@@ -15,17 +16,14 @@ import matplotlib.cm as cm
 
 from configs.config_6d import initialize_6d_OU
 
+key, save_mode = parse_command_line(default_key=51) # default key (51) exhibits lots of solenoidal activity, but largely avoids the most-likely sensory/active state line on way to mode of NESS density
+
+## Other keys of interest
 # initialization_key = 5    # default configuration in `config_6d.py` file if no key is passed, lots of solenoidal flow / oscillations. Non-monotonic FE descent
-# initialization_key = 20    # this one's good too
+# initialization_key = 20   # this one's good too
 # initialization_key = 25   # in this one, on the way to steady state the trajectory doesn't quite go along the most likely line, but goes parallel to it
 # initialization_key = 26   # lots of solenoidal, kinda avoids the most-likely sensory/active state line
-# initialization_key = 50    # lots of solenoidal, kinda avoids the most-likely sensory/active state line
-initialization_key = 51      # lots of solenoidal, kinda avoids the most-likely sensory/active state line
-
-# fix random seed for reproducibility
-key = random.PRNGKey(initialization_key)   
-
-save_mode = True
+# initialization_key = 50   # lots of solenoidal, kinda avoids the most-likely sensory/active state line
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
@@ -38,7 +36,7 @@ figures_folder = os.path.join(figures_folder, '6d_actinf')
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
 
-seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+seed_folder = os.path.join(figures_folder, f'seed_{key[1]}')
 if not os.path.isdir(seed_folder):
     os.mkdir(seed_folder)
 

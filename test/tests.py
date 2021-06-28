@@ -1,11 +1,16 @@
 import os
+import sys
 import unittest
 
 import numpy as np
 import jax.numpy as jnp
 from jax import random, vmap, lax
+from pathlib import Path
 
-from src.utilities import initialize_random_friction_numpy
+path = Path(os.getcwd())
+sys.path.append(str(path / 'src') + '/')
+
+from utilities import initialize_random_friction_numpy
 
 N_VAR, dt, T, N_REAL = 4, 1e-3, 1000, 100 # global parameters for the process
 
@@ -18,7 +23,7 @@ class DiffusionTest(unittest.TestCase):
         """
         Validate that the vectorized dot product gives the intended parallelism
         """
-        RNG_key = random.PRNGKey(0)
+        RNG_key = random.PRNGKey(1)
 
         random_evals = 0.1 * random.uniform(RNG_key, shape = (N_VAR, ))
         RNG_key, next_key = random.split(RNG_key)
@@ -38,7 +43,7 @@ class DiffusionTest(unittest.TestCase):
         """
         Validate that the scan implementation of OU process integration is identical to that using a standard for loop
         """
-        RNG_key = random.PRNGKey(1)
+        RNG_key = random.PRNGKey(2)
 
         random_evals = 0.1 * random.uniform(RNG_key, shape = (N_VAR, ))
         RNG_key, next_key = random.split(RNG_key)
@@ -89,7 +94,6 @@ class DiffusionTest(unittest.TestCase):
         scan_result = integrate_w_scan(x0, w, dt, T, N_REAL)
         for_result  = integrate_w_for(x0, w, dt, T, N_REAL)
         
-        # self.assertTrue(jnp.absolute(scan_result - for_result).max() < TOL)
         self.assertTrue(jnp.isclose(scan_result, for_result, atol = TOL).all())
 
 if __name__ == "__main__":

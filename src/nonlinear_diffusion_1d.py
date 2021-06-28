@@ -1,4 +1,5 @@
 import os
+from utilities import parse_command_line
 from diffusions import NonlinearProcess
 import jax.numpy as jnp
 from jax import random, jacfwd
@@ -6,11 +7,7 @@ from matplotlib import pyplot as plt
 import matplotlib.cm as cm
 import seaborn as sns
 
-initialization_key = 0   # default configuration 
-
-key = random.PRNGKey(initialization_key) # fix random seed for reproducibility
-
-save_mode = True
+key, save_mode = parse_command_line(default_key = 0)
 
 figures_folder = 'figures'
 if not os.path.isdir(figures_folder):
@@ -20,7 +17,7 @@ figures_folder = os.path.join(figures_folder, '1d_nonlinear_diffusion')
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
 
-seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+seed_folder = os.path.join(figures_folder, f'seed_{key[1]}')
 if not os.path.isdir(seed_folder):
     os.mkdir(seed_folder)
 

@@ -1,6 +1,6 @@
 import os
 from diffusions import NonlinearProcess
-from utilities import plot_hot_colourline
+from utilities import plot_hot_colourline, parse_command_line
 import jax.numpy as jnp
 from jax import random, jacfwd
 from matplotlib import pyplot as plt
@@ -13,14 +13,10 @@ from scipy.stats import pearsonr
 # import the 3way configuration variables 
 from configs.config_3d import initialize_3d_nonlinear
 
-initialization_key = 1
-
-key = random.PRNGKey(initialization_key) # fix random seed for reproducibility
+key, save_mode = parse_command_line(default_key = 1)
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
-
-save_mode = True
 
 figures_folder = 'figures'
 if not os.path.isdir(figures_folder):
@@ -30,7 +26,7 @@ figures_folder = os.path.join(figures_folder, '3d_nonlinear_diffusion')
 if not os.path.isdir(figures_folder):
     os.mkdir(figures_folder)
 
-seed_folder = os.path.join(figures_folder, f'seed_{initialization_key}')
+seed_folder = os.path.join(figures_folder, f'seed_{key[1]}')
 if not os.path.isdir(seed_folder):
     os.mkdir(seed_folder)
 
@@ -165,7 +161,6 @@ for unique_bin_idx in range(len(unique_bins)):
 # map the empirical most likely internal state to a corresponding expected external state, via the synchronization map
 sync_boldmu = sync * mu_cond_b
 
-# plt.figure(figsize=(14,10))
 plt.figure()
 
 plt.suptitle('Synchronisation map',fontsize=16, y = 0.99)
@@ -181,9 +176,6 @@ plt.xlabel('Blanket state space $\mathcal{B}$',fontsize=14)
 plt.ylabel('External state space $\mathcal{E}$',fontsize=14)
 cor = pearsonr(sync_boldmu[bin_counts > 1000], eta_cond_b[bin_counts > 1000])[0]
 plt.title(f'Pearson correlation = {np.round(cor, 6)}...',fontsize=14)
-
-# plt.title('Synchronisation map',fontsize=16)
-# plt.gcf().text(0.55, 0.6, f'R = {np.round(cor, 6)}...', fontsize=14)
 
 plt.legend(loc='upper right',fontsize=16)
 plt.autoscale(enable=True, axis='x', tight=True)

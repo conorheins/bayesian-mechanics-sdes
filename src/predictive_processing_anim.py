@@ -8,12 +8,13 @@ import jax.numpy as jnp
 from jax import random
 
 from diffusions import LinearProcess
+from utilities import parse_command_line
 from configs.config_3d import initialize_3d_OU
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
 
-initialization_key = 1 # choose a key to fix the random seed for reproducibility
+key, save_mode = parse_command_line(default_key = 1)
 
 flow_parameters, stationary_stats, sync_mappings, dimensions = initialize_3d_OU(rng_key = 'default') # default parameterisation, gives a pre-defined steady-state / precision matrix
 
@@ -26,14 +27,11 @@ eta_dim = dimensions['eta']
 b_dim = dimensions['b']
 mu_dim = dimensions['mu']
 
-
 dt = 0.01     # duration of single time-step 
 T = 250       # total number of integration timesteps,
 n_real = 1    # number of parallel paths to simulate
 
 S, Pi = stationary_stats['S'], stationary_stats['Pi']
-
-key = random.PRNGKey(initialization_key)
 
 b_eta, b_mu, sync = sync_mappings['b_eta'], sync_mappings['b_mu'], sync_mappings['sync']
 
@@ -122,10 +120,13 @@ def animate(i):
     axes[1].legend(fontsize=30,loc='upper right')
 
 anim = animation.FuncAnimation(fig, animate, frames = T, interval = 1, blit = False)
-# plt.show()
 
-figures_folder = 'figures'
-if not os.path.isdir(figures_folder):
-    os.mkdir(figures_folder)
+if save_mode:
+    figures_folder = 'figures'
+    if not os.path.isdir(figures_folder):
+        os.mkdir(figures_folder)
 
-anim.save(os.path.join(figures_folder,'preditive_processing.gif'),fps=7.5)
+    anim.save(os.path.join(figures_folder,'predictive_processing.gif'),fps=7.5)
+else:
+    plt.show()
+
