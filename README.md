@@ -37,7 +37,7 @@ The requirements to run the code in this package are self-contained as dependenc
 
 # Running the code
 
-Once you've created and activated your conda environment with `conda activate bayesmech_statproc`, you can run any of the code to create the paper's figures using the general format:
+Once you've created and activated your conda environment with `conda activate bayesmech_statproc`, you can run the code to create the paper's figures using the general format:
 
 ```
 python3 src/<SCRIPT_NAME>.py [-optional args...]
@@ -63,3 +63,18 @@ If you want to save the figures as .pngs to disk (in the `./figures` folder), yo
 ```
 python3 src/linear_diffusion_6d_actinf.py  --save
 ```
+
+NOTE: There is an exception to this general format for reproducing Figure 2 of the paper (the synchronization map example vs. non-example). There one should simply run:
+
+```
+python3 src/Sync_map_example.py
+```
+
+or 
+
+
+```
+python3 src/Sync_map_non_example.py
+```
+
+to generate the left and right panels (respectively) of Figure 2.
