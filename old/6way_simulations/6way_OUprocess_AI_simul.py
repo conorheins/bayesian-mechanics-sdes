@@ -7,17 +7,24 @@ import numpy as np
 from numpy.linalg import inv, det, pinv
 from numpy.linalg import eigvals as spec
 import matplotlib.pyplot as plt
-from matplotlib.patches import Ellipse, Patch
+import matplotlib.cm as cm
 
 pgf_with_latex = {"pgf.preamble": r"\usepackage{amsmath}"}  # setup matplotlib to use latex for output
 plt.style.use('seaborn-white')
 from scipy.linalg import null_space as ker
 from scipy.linalg import sqrtm
 
+
 '''
 Functions
 '''
 
+def plot_colourline(x, y, c, lw=0.5):
+    ax = plt.gca()
+    for i in np.arange(len(x) - 1):
+        ax.plot([x[i], x[i + 1]], [y[i], y[i + 1]], c=c[i], linewidth=lw)
+    plt.show()
+    return
 
 def rank(A):  # compute matrix rank
     if A.size == 0:
@@ -41,6 +48,7 @@ def num(s):  # counts number of elements
         raise TypeError('Type not supported by num')
 
 
+np.random.seed(1)
 '''
 Setting up the steady-state
 '''
@@ -99,7 +107,7 @@ print(f'det sigma = {det(sigma)}')
 D = (sigma @ sigma.T) / 2
 
 # solenoidal flow
-Q = np.round(np.triu(np.random.normal(loc=1, scale=std, size=dim ** 2).reshape([dim, dim])),
+Q = np.round(np.triu(np.random.normal(loc=1, scale=2*std, size=dim ** 2).reshape([dim, dim])),
              1)  # arbitrary solenoidal flow
 # Q = np.zeros([dim, dim])  # no solenoidal flow
 Q = Q - Q.T
@@ -162,6 +170,7 @@ x0[du, :] = np.random.multivariate_normal(mean=mean_posterior, cov=inv(insensiti
 
 # sample paths
 x = process.simulation(x0, epsilon, T, N)  # run simulation
+n = np.argmin(x[da, 0, :]) # which sample path to show (between 0 and N)
 
 S_part_inv = inv(S[dp, dp])
 
@@ -193,21 +202,22 @@ active = np.linspace(np.min(x[da, :, :]) - 1, np.max(x[da, :, :]) + 0.5, 100)  #
 
 Z = F_boldmu(sensory, active)  # free energy up to additive constant
 
-n = 2  # which sample path to show (between 0 and N)
 
 plt.figure(4)
 plt.clf()
-plt.title('Free energy $F(s,a, \mathbf{\mu})$')
+plt.title('Free energy $F(s,a, \mathbf{\mu})$',fontsize=16)
 plt.contourf(sensory, active, Z, levels=100, cmap='turbo')  # plotting the free energy landscape
 plt.colorbar()
-plt.xlabel('sensory state $s$')
-plt.ylabel('active state $a$')
+plt.xlabel('sensory state $s$',fontsize=14)
+plt.ylabel('active state $a$',fontsize=14)
 bold_a = (S[da, ds] / S[ds, ds] * sensory).reshape(len(sensory))  # expected active state
 plt.plot(sensory, bold_a, c='white')  # plot expected internal state as a function of blanket states
 OU.plot_hot_colourline(x[ds, :, n].reshape(T), x[da, :, n].reshape(T), lw=0.5)
-plt.text(s='$\mathbf{a}(s)$', x=np.min(x[ds, :, :]) - 0.7, y=S[da, ds] / S[ds, ds] * (np.min(x[ds, :, :]) - 0.7) + 0.4,
-         color='white')
-plt.text(s='$(s_t,a_t)$', x=x[ds, 1, n] - 0.5, y=x[da, 1, n] + 0.2, color='black')
+plt.text(s='$\mathbf{a}(s)$', x=np.min(x[ds, :, :]) - 0.7, y=S[da, ds] / S[ds, ds] * (np.min(x[ds, :, :]) - 0.7) + 0.8,
+         color='white',fontsize=16)
+plt.text(s='$(s_t,a_t)$', x=x[ds, 5, n] - 4, y=x[da, 5, n], color='black',fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.savefig("Sample_perturbed_AI_6wayOU.png")
 
 '''
@@ -217,17 +227,51 @@ Figure 5: average F(b, bold mu) over trajectories
 # compute average free energy over time
 F_z = np.empty([T, N])
 for t in range(T):
-    for n in range(N):
-        F_z[t, n] = F_boldmu(x[ds, t, n], x[da, t, n])  # compute free energy
+    for i in range(N):
+        F_z[t, i] = F_boldmu(x[ds, t, i], x[da, t, i])  # compute free energy
 mean_F = np.mean(F_z, axis=1)  # take mean over trajectories
 
 plt.figure(5)
 plt.clf()
-plt.title('Average free energy over time')
+plt.title('Average free energy over time', fontsize=16)
 OU.plot_hot_colourline(np.arange(T), mean_F)
 xlabel = int(T * 0.4)  # position of text on x axis
 plt.text(s='$F(s_t, a_t, \mathbf{\mu}_t)$', x=xlabel, y=mean_F[xlabel] + 0.05 * (np.max(mean_F) - mean_F[xlabel]),
-         color='black')
-plt.xlabel('Time')
-plt.ylabel('Free energy $F(s_t,a_t, \mathbf{\mu}_t)$')
+         color='black',fontsize=16)
+plt.xlabel('Time',fontsize=14)
+plt.ylabel('Free energy $F(s_t,a_t, \mathbf{\mu}_t)$',fontsize=14)
 plt.savefig("FE_vs_time_perturbed_AI_6wayOU.png")
+
+
+'''
+Figure 7: particular states over time (simulation of control)
+'''
+T_simul = 150
+
+bottom = np.min(x[dp, :T_simul, n])-0.1
+top = np.max(x[dp, :T_simul, n]) +0.1
+
+
+plt.figure(8)
+plt.clf()
+plt.title('Particular states over time',fontsize=16)
+plt.plot(np.arange(T_simul), np.zeros(T_simul), linestyle='dashed', c ='gray', linewidth= 0.3)
+
+indices = np.arange(T_simul)
+#c_red= np.flip(cm.Reds((indices - np.min(indices)) / (np.max(indices) - np.min(indices))),0)
+#plot_colourline(indices, x[da, :T_simul, n].reshape(T_simul), c_red)
+plt.plot(indices, x[da, :T_simul, n].reshape(T_simul), c='red', linewidth =0.7, label= '$a_t$')
+
+#c_green= np.flip(cm.Greens((indices - np.min(indices)) / (np.max(indices) - np.min(indices))),0)
+#plot_colourline(indices, x[ds, :T_simul, n].reshape(T_simul), c_green)
+plt.plot(indices, x[ds, :T_simul, n].reshape(T_simul), c='green', linewidth =0.7, label= '$s_t$')
+
+#c_blue= np.flip(cm.Blues((indices - np.min(indices)) / (np.max(indices) - np.min(indices))),0)
+plt.plot(indices, x[4, :T_simul, n].reshape(T_simul), c='royalblue', linewidth =0.4, label= '$(\mu_t)_1$')
+plt.plot(indices, x[5, :T_simul, n].reshape(T_simul), c='cornflowerblue', linewidth =0.4, label= '$(\mu_t)_2$')
+
+plt.xlabel('Time',fontsize=14)
+#plt.ylabel('$s_t$ or $a_t$',fontsize=14)
+plt.legend(ncol=2,fontsize=14)
+plt.ylim((bottom, top))
+plt.savefig("pi_t_perturbed_AI_6wayOU.png")
