@@ -42,7 +42,7 @@ def initialize_2d_OU(rng_key = None):
     sigma = jnp.eye(n_var)
     _, next_key = random.split(next_key)
 
-        #diffusion tensor
+    #diffusion tensor
     D = sigma @ sigma.T / 2  # diffusion tensor
 
     # see whether noise is degenerate or not
