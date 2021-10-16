@@ -84,7 +84,7 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free energy landscape
 
 plt.suptitle('Full dynamic',fontsize=16)
-plt.title(r'$dx_t = b_{rev}(x_t)dt+b_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$', fontsize=14)
+plt.title(r'$dx_t = \beta_{rev}(x_t)dt+\beta_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$', fontsize=14)
 
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
@@ -141,7 +141,7 @@ plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-irreversible',fontsize=16)
-plt.title(r'$dx_t = b_{irrev}(x_t)dt$',fontsize=14)
+plt.title(r'$dx_t = \beta_{irrev}(x_t)dt$',fontsize=14)
 # plot_hot_colourline(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5)  # warning: this runs slow for long trajectories
 plt.plot(x[:, 0, real_idx_conservative].squeeze(), x[:, 1, real_idx_conservative].squeeze(), lw=0.5) # this runs faster due to same color for every point - use this for debugging purposes
 
@@ -167,8 +167,9 @@ B_dissipative = flow_parameters['D'] @ stationary_stats['Pi']  # drift matrix
 dissipative_process = LinearProcess(dim=n_var, friction=B_dissipative, volatility=flow_parameters['sigma'])  # create process
 
 x0 = jnp.zeros( (2, n_real) ) + 0.2
-_, key = random.split(key)
-x = dissipative_process.integrate(int(1.2 * T), n_real, dt, x0, rng_key = key) # run simulation
+
+_, key = random.split(key) # try commenting this out next
+x = dissipative_process.integrate(int(T), n_real, dt, x0, rng_key = key) # run simulation
 
 '''
 Plot trajectory dissipative simulation
@@ -185,7 +186,8 @@ pos = np.dstack((X, Y))
 
 rv = multivariate_normal(cov= S) #random normal
 
-real_idx_dissipative = 6
+real_idx_dissipative = 6 
+
 print(f'Sample path index being shown: {real_idx_dissipative}\n')
 
 plt.figure(6)
@@ -193,7 +195,7 @@ plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-reversible',fontsize=16)
-plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$',fontsize=14)
+plt.title(r'$dx_t = \beta_{rev}(x_t)dt+ \varsigma(x_t)dW_t$',fontsize=14)
 # plot_hot_colourline(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # warning: this runs slow for long trajectories
 plt.plot(x[:, 0, real_idx_dissipative].squeeze(), x[:, 1, real_idx_dissipative].squeeze(), lw=0.5) # this runs faster due to same color for every point
 
@@ -207,7 +209,6 @@ if save_mode:
     figure_name = "Helmholtz_dissipative.png"
     plt.savefig(os.path.join(seed_folder, figure_name), dpi=100)
     plt.close()
-
 
 
 '''
