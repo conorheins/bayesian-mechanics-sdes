@@ -14,7 +14,7 @@ Companion repository for Bayesian mechanics for stationary processes (2021) by L
 # Installation 
 
 To run the code in this repo, we recommend building a conda environment using the provided `environment.yml` file, which 
-will install the required dependencies for you (see below):
+will install (most of) the required dependencies for you - see below:
 
 ```
 conda env create -f environment.yml
@@ -26,9 +26,15 @@ Once you build the repository using the environment file, you can activate it us
 conda activate bayesmech_statproc
 ```
 
+In our experience installing `jax` with `pip` works better than going through `conda`. Therefore, after building the conda environment, use `pip` to install `jax` and `jaxlib` using the following:
+
+```
+pip install --upgrade jax jaxlib
+```
+
 # Requirements
 
-The requirements to run the code in this package are self-contained as dependencies in the `environment.yml` file. The core functionality depends on [Python 3.8^](https://www.python.org/downloads/release/python-380/) and relies heavily on the following packages for stochastic integration, statistics, and visualization routines:
+The requirements to run the code in this package are self-contained as dependencies in the `environment.yml` file (besides `jax`, see above). The core functionality depends on [Python 3.8^](https://www.python.org/downloads/release/python-380/) and relies heavily on the following packages for stochastic integration, statistics, and visualization routines:
 
 * [jax](https://github.com/google/jax)
 * [NumPy](https://github.com/numpy/numpy)
