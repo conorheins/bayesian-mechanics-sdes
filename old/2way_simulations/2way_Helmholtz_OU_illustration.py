@@ -135,7 +135,7 @@ plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')  # plotting the free energy landscape
 
 plt.suptitle('Full dynamic')
-plt.title(r'$dx_t = b_{rev}(x_t)dt+b_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$')
+plt.title(r'$dx_t = \beta_{rev}(x_t)dt+\beta_{irrev}(x_t)dt+ \varsigma(x_t)dW_t$')
 
 OU.plot_hot_colourline(x[0, :, n].reshape(T), x[1, :, n].reshape(T), lw=0.5)
 plt.savefig("Helmholtz_complete.png", dpi=100)
@@ -173,7 +173,7 @@ plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-irreversible')
-plt.title(r'$dx_t = b_{irrev}(x_t)dt$')
+plt.title(r'$dx_t = \beta_{irrev}(x_t)dt$')
 OU.plot_hot_colourline(x[0, :, n].reshape(T), x[1, :, n].reshape(T), lw=0.5)
 plt.savefig("Helmholtz_conservative.png", dpi=100)
 
@@ -209,7 +209,7 @@ plt.clf()
 plt.title('')
 plt.contourf(X, Y, rv.pdf(pos), levels=100, cmap='Blues')
 plt.suptitle('Time-reversible')
-plt.title(r'$dx_t = b_{rev}(x_t)dt+ \varsigma(x_t)dW_t$')
+plt.title(r'$dx_t = \beta_{rev}(x_t)dt+ \varsigma(x_t)dW_t$')
 OU.plot_hot_colourline(x[0, :, n].reshape(T), x[1, :, n].reshape(T), lw=0.5)
 plt.savefig("Helmholtz_dissipative.png", dpi=100)
 
